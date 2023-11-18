@@ -1,10 +1,10 @@
 # CMPM-121-Final-Project
 ## Introducing the team
-Vincent Kurniadjaja - Tools Lead
-Steven Ren - Engine Lead
-Gordon Cai - Design Lead
-Jane Tran: General Assistant
-Tony...
+- Vincent Kurniadjaja - Tools Lead
+- Steven Ren - Engine Lead
+- Gordon Cai - Design Lead
+- Jane Tran: General Assistant
+- Tony...
 
 ## Tools and materials
 With about one paragraph each...
