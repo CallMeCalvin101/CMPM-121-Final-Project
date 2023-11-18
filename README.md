@@ -4,7 +4,7 @@
 - Steven Ren - Engine Lead
 - Gordon Cai - Design Lead
 - Jane Tran: General Assistant
-- Tony...
+- Tony Guizar: Backup
 
 ## Tools and materials
 With about one paragraph each...
