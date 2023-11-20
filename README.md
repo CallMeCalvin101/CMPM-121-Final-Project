@@ -7,7 +7,7 @@
 - Tony Guizar: Backup
 
 ## Tools and materials
-We decided to use Unity to make a 2d game. We chose Unity because there isn't a lot of overlap between the engines that we know between us and some of us are more experienced and comfortable woth Unity than Phaser.
+We decided to use Unity to make a 2d game. We chose Unity because there isn't a lot of overlap between the engines that we know between us and some of us are more experienced and comfortable with Unity than Phaser.
 
 For Unity, we'll mostly be using C# as that is the language that Unity uses. We chose to use these lanaguages because a lot of us have past experience with them due to our past game projects and/or previous classes that taught them.
 
