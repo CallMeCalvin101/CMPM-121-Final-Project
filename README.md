@@ -1,4 +1,4 @@
-# CMPM-121-Final-Project
+# Steven Ren - 11/19/2023
 ## Introducing the team
 - Vincent Kurniadjaja - Tools Lead
 - Steven Ren - Engine Lead
@@ -7,14 +7,12 @@
 - Tony Guizar: Backup
 
 ## Tools and materials
-With about one paragraph each...
+We decided to use Unity to make a 2d game. We chose Unity because there isn't a lot of overlap between the engines that we know between us and some of us are more experienced and comfortable woth Unity than Phaser.
 
-Tell us about what engines, libraries, frameworks, and or platforms you intend to use, and give us a tiny bit of detail about why your team chose those.
-Tell us programming languages (e.g. TypeScript) and data languages (e.g. JSON) you team expects to use and why you chose them. Presumably you’ll just be using the languages expected by your previously chosen engine/platform.
-Tell us about which tools you expect to use in the process of authoring your project. You might name the IDE for writing code, the image editor for creating visual assets, or the 3D editor you will use for building your scene. Again, briefly tell us why you made these choices. Maybe one of your teammates feels especially skilled in that tool or it represents something you all want to learn about.
+For Unity, we'll mostly be using C# as that is the language that Unity uses. We chose to use these lanaguages because a lot of us have past experience with them due to our past game projects and/or previous classes that taught them.
+
+I expect us to use Visual Studio 2022 as that is the default IDE for Unity or maybe some of us will stick with Visual Studio Code instead. We want to keep our options open so we are considering form multiple sources like Tiled, the Unity Store, or other sources we find while doing research that seems promising. We have experience with Tiled from CMPM120 and some of us have experience with the Unity Asset Store as well so if any of our members don't know how to use it, we can help them.
+
 ## Outlook
-Give us a short section on your outlook on the project. You might cover one or more of these topics:
-
-What is your team hoping to accomplish that other teams might not attempt?
-What do you anticipate being the hardest or riskiest part of the project?
-What are you hoping to learn by approaching the project with the tools and materials you selected above?
+We anticipate the hardest part of this assignment to be the suprise requirements. The suprise requirements might cause us to redo and reformat a lot of our code in the future to meet the conditions and might even cause us to completely start from the ground up if the requirement is too out-of-the-way for our current code. 
+Through this project, we hope to hone our programming skills, and train them to be more flexible when suprise changes are needed. We also hope to learn more about our programming engine and how to work as a team to produce a game.
