@@ -184,6 +184,7 @@ class Game {
         ctx!.fillRect(x, y, cellSize, cellSize);
       }
     }
+    
   }
 
   //randomly change the weather conditions
@@ -260,6 +261,30 @@ function drawGame() {
   }
 }
 
+const availablePlants: Plant[] = [
+  new Plant("Sunflower", "flower", 3, 2, "yellow"),
+  new Plant("Rose", "flower", 2, 3, "pink"),
+];
+
+function promptPlantSelection(): string {
+  const plantNames = availablePlants.map((plant) => plant.name).join(', ');
+  const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
+  return prompt(promptText) || ''; // Prompt the player for the plant name
+}
+
+function reapPlant(currentCell: Cell) {
+  
+    const confirmReap = window.confirm(`Do you want to reap the ${currentCell.plant!.name} plant?\nDetails:\nSun Level: ${currentCell.plant!.sunLevel}, Water Level: ${currentCell.plant!.waterLevel}, Growth Level: ${currentCell.plant!.growthLevel}`);
+    
+    if (confirmReap) {
+      farmer.plants.push(currentCell.plant!);
+      const reapedPlant = currentCell.plant!.name;
+      currentCell.plant = null; // Remove plant from cell
+      currentCell.color = "saddlebrown";
+      console.log(`You reaped the ${reapedPlant} plant!`);
+    }
+  }
+
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 
@@ -280,13 +305,22 @@ document.addEventListener("keydown", (event) => {
       break;
     case " ":
       const currentCell = farmer.getCurrentCell();
-      if (currentCell!.plant != null){ // if there is a plant here, reap it (Weeds and Flowers)
-        farmer.plants.push(currentCell!.plant);
-        currentCell!.plant = null; //remove plant fom cell
-        currentCell!.color = "saddlebrown";
-      }else if (farmer.plants.length > 0){
-        currentCell!.plant = farmer.plants.pop()!;
-        currentCell!.color = currentCell!.plant.color;
+      if (currentCell!.plant != null && currentCell){ // if there is a plant here, reap it (Weeds and Flowers)
+      reapPlant(currentCell);
+      console.log(farmer.plants);
+        // farmer.plants.push(currentCell!.plant);
+        // currentCell!.plant = null; //remove plant fom cell
+        // currentCell!.color = "saddlebrown";
+      }else if (currentCell!.plant == null){
+        const plantName = promptPlantSelection();
+        const selectedPlant = availablePlants.find((plant) => plant.name.toLowerCase() === plantName.toLowerCase());
+        if (selectedPlant) {
+          currentCell!.plant = (new Plant(selectedPlant.name, selectedPlant.type,selectedPlant.sunRequisite, selectedPlant.waterRequisite,selectedPlant.color));
+          currentCell!.color = selectedPlant.color;
+          farmer.getCurrentCell();
+        } else {
+          console.log('Invalid plant selection.');
+        }
       }
       else{
         alert("No plants available!");
@@ -317,10 +351,7 @@ const farmer = new Character(
 );
 
 //hopefully this works as a plant holder
-const availablePlans: Plant[] = [
-  new Plant("Sunflower", "flower", 3, 2, "yellow"),
-  new Plant("Rose", "flower", 2, 3, "pink"),
-];
+
 
 
 drawGame();
