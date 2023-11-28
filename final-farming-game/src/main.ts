@@ -284,8 +284,12 @@ document.addEventListener("keydown", (event) => {
         farmer.plants.push(currentCell!.plant);
         currentCell!.plant = null; //remove plant fom cell
         currentCell!.color = "saddlebrown";
-      }else{
-        alert("There is no plant here!");
+      }else if (farmer.plants.length > 0){
+        currentCell!.plant = farmer.plants.pop()!;
+        currentCell!.color = currentCell!.plant.color;
+      }
+      else{
+        alert("No plants available!");
       }
 
       break;
