@@ -1,126 +1,16 @@
 import "./style.css";
 import { Scenario } from "./scenario.ts";
 
+
+//------------------------------------ Global Vars ------------------------------------------------------------------------------------
+
 const canvas = document.getElementById("game");
 const gameHeight = (canvas! as HTMLCanvasElement).height;
 const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 
-class Cell {
-  isMoist: boolean;
-  plant: string | null;
-  growthLevel: number;
-  driedYesterday: boolean;
-  plantPot: Plant | null;
-
-  constructor() {
-    this.isMoist = false;
-    this.plant = null; // 'flower', 'weed', or null
-    this.growthLevel = 0;
-    this.driedYesterday = false;
-    this.plantPot = null;
-  }
-}
-
-class Game {
-  grid: Cell[][];
-  weather: string; // 'sunny' or 'rainy'
-
-  constructor() {
-    this.grid = Array.from({ length: 4 }, () =>
-      Array.from({ length: 4 }, () => new Cell())
-    );
-    this.weather = "sunny"; // 'sunny' or 'rainy'
-    this.updateWeatherUI();
-  }
-  //randomly change the weather conditions
-  updateWeather() {
-    this.weather = Math.random() < 0.7 ? "sunny" : "rainy"; // 70% chance of sun
-  }
-  //update the weather condition text on screen
-  updateWeatherUI() {
-    const weatherElement = document.getElementById("weather");
-    if (weatherElement) {
-      weatherElement.textContent = `Current Weather: ${
-        this.weather.charAt(0).toUpperCase() + this.weather.slice(1)
-      }`;
-    }
-  }
-  //update the moisture of all grids
-  updateMoisture() {
-    if (this.weather === "rainy") {
-      this.grid.forEach((row) => row.forEach((cell) => (cell.isMoist = true)));
-    } else {
-      this.grid.forEach((row) =>
-        row.forEach(
-          (cell) => (cell.isMoist = cell.isMoist && !cell.driedYesterday)
-        )
-      );
-    }
-    this.grid.forEach((row) =>
-      row.forEach((cell) => (cell.driedYesterday = !cell.isMoist))
-    );
-  }
-  //placing any update functions here
-  updateGame() {
-    this.updateWeather();
-    this.updateWeatherUI();
-    this.updateMoisture();
-  }
-}
-
-class Grid {
-  public cells: Cell[][];
-
-  constructor(public rows: number, public cols: number) {
-    this.cells = Array.from({ length: rows }, () =>
-      Array.from({ length: cols }, () => new Cell())
-    );
-    this.generateRandomGrid();
-  }
-
-  generateRandomGrid() {
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        const randomValue = Math.random();
-        if (randomValue < 0.25) {
-          this.cells[i][j].plant = "flower";
-        } else if (randomValue < 0.5) {
-          this.cells[i][j].plant = "weed";
-        }
-      }
-    }
-  }
-
-  draw() {
-    const cellSize = gameWidth / this.cols;
-
-    for (let i = 0; i < this.rows; i++) {
-      for (let j = 0; j < this.cols; j++) {
-        const x = j * cellSize;
-        const y = i * cellSize;
-        const cell = this.cells[i][j];
-
-        ctx!.fillStyle = getColor(cell.plant || "empty");
-        ctx!.fillRect(x, y, cellSize, cellSize);
-      }
-    }
-  }
-}
-
-function getColor(type: string): string {
-  switch (type) {
-    case "flower":
-      return "pink";
-    case "weed":
-      return "green";
-    case "empty":
-      return "#563d2d";
-    default:
-      return "#563d2d";
-  }
-}
+//------------------------------------ Class def ------------------------------------------------------------------------------------
 
 class Character {
   constructor(
@@ -128,40 +18,50 @@ class Character {
     public y: number,
     public width: number,
     public height: number,
-    public color: string
+    public color: string,
+    public plants: Plant[]
   ) {}
 
   draw() {
     ctx!.fillStyle = this.color;
     ctx!.fillRect(this.x, this.y, this.width, this.height);
   }
+
+  //return the cell and its properties
+  getCurrentCell() {
+    const cellSize = gameWidth / game.cols;
+    const gridX = Math.floor(farmer.x / cellSize);
+    const gridY = Math.floor(farmer.y / cellSize);
+
+    if (game.grid[gridY] && game.grid[gridY][gridX]) {
+      const currentCell = game.grid[gridY][gridX];
+      console.log(`Player is standing on cell at (${gridX}, ${gridY})`);
+      console.log("Cell Info:", currentCell);
+      return currentCell;
+    }
+  }
 }
 
-const farmer = new Character(
-  gameWidth / 2 - 35,
-  gameHeight / 2 - 35,
-  40,
-  70,
-  "black"
-);
-const gameGrid = new Grid(7, 7);
-const game = new Game();
-setInterval(() => {
-  game.updateGame();
-  drawGame();
-}, 10000);
+class Cell {
+  isMoist: boolean;
+  plant: Plant | null;
+  growthLevel: number;
+  driedYesterday: boolean;
+  plantPot: Plant | null;
+  color: string;
 
-// Draw game
-function drawGame() {
-  ctx!.clearRect(0, 0, gameWidth, gameHeight);
-  gameGrid.draw();
-  farmer.draw();
+  constructor() {
+    this.isMoist = false;
+    this.plant = null;
+    this.growthLevel = 0;
+    this.driedYesterday = false;
+    this.plantPot = null;
+    this.color = "saddlebrown";
+  }
 
-  const weatherElement = document.getElementById("weather");
-  if (weatherElement) {
-    weatherElement.textContent = `Current Weather: ${
-      game.weather.charAt(0).toUpperCase() + game.weather.slice(1)
-    }`;
+  //update color of cells based on plants in that cell
+  updateCellColor(color: string) {
+    this.color = color;
   }
 }
 
@@ -171,25 +71,28 @@ class Plant {
   waterLevel: number;
   growthLevel: number;
   name: string;
-  game: Game;
   cell: Cell | null; // can be null because it hasn't been planted yet
+  type: string; //flower or weed or other type
   //for constructing a plant,
   sunRequisite: number;
   waterRequisite: number;
+  color: string;
   constructor(
-    game: Game,
     name: string,
+    type: string,
     sunRequisite: number,
-    waterRequisite: number
+    waterRequisite: number,
+    color: string
   ) {
     this.sunLevel = 0;
     this.waterLevel = 0;
     this.growthLevel = 0;
-    this.game = game;
     this.cell = null;
     this.name = name;
     this.sunRequisite = sunRequisite;
     this.waterRequisite = waterRequisite;
+    this.type= type;
+    this.color = color;
   }
   waterPlant(): void {
     // Simulate the effect of watering based on the isMoist property of the cell
@@ -204,7 +107,7 @@ class Plant {
 
   exposeToSun() {
     // Simulate the effect of exposure to sun based on the game's weather
-    const sunChance = this.game.weather === "sunny" ? 0.8 : 0.2;
+    const sunChance = game.weather === "sunny" ? 0.8 : 0.2;
 
     if (Math.random() < sunChance) {
       this.sunLevel += 1;
@@ -235,23 +138,130 @@ class Plant {
   }
 }
 
-//for debugging purposes, logs the cell and its properties
-function logCurrentCell() {
-  const cellSize = gameWidth / gameGrid.cols;
-  const gridX = Math.floor(farmer.x / cellSize);
-  const gridY = Math.floor(farmer.y / cellSize);
+class Game {
+  rows: number;
+  cols: number;
+  grid: Cell[][];
+  weather: string; // 'sunny' or 'rainy'
 
-  if (gameGrid.cells[gridY] && gameGrid.cells[gridY][gridX]) {
-    const currentCell = gameGrid.cells[gridY][gridX];
-    console.log(`Player is standing on cell at (${gridX}, ${gridY})`);
-    console.log("Cell Info:", currentCell);
+  constructor(rows: number, cols: number) {
+    this.rows = rows;
+    this.cols = cols;
+    this.grid = Array.from({ length: rows }, () =>
+      Array.from({ length: cols }, () => new Cell())
+    );
+    this.generateRandomGrid();
+    this.weather = "sunny"; // 'sunny' or 'rainy'
+    this.updateWeatherUI();
+  }
+
+  generateRandomGrid() {
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        const randomValue = Math.random();
+        if (randomValue < 0.25) {
+          this.grid[i][j].plant = new Plant("Rose", "flower", 3 , 2, "pink") ;
+          this.grid[i][j].color = "pink"
+
+        } else if (randomValue < 0.5) {
+          this.grid[i][j].plant = new Plant("Crabgrass", "weed", 1, 1, "green");
+          this.grid[i][j].color = "green"
+        }
+      }
+    }
+  }
+
+  draw() {
+    const cellSize = gameWidth / this.cols;
+
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        const x = j * cellSize;
+        const y = i * cellSize;
+        const cell = this.grid[i][j];
+
+        ctx!.fillStyle = cell.color;
+        ctx!.fillRect(x, y, cellSize, cellSize);
+      }
+    }
+  }
+
+  //randomly change the weather conditions
+  updateWeather() {
+    this.weather = Math.random() < 0.7 ? "sunny" : "rainy"; // 70% chance of sun
+  }
+  //update the weather condition text on screen
+  updateWeatherUI() {
+    const weatherElement = document.getElementById("weather");
+    if (weatherElement) {
+      weatherElement.textContent = `Current Weather: ${
+        this.weather.charAt(0).toUpperCase() + this.weather.slice(1)
+      }`;
+    }
+  }
+  //update the moisture of all grids
+  updateMoisture() {
+    if (this.weather === "rainy") {
+      this.grid.forEach((row) => row.forEach((cell) => (cell.isMoist = true)));
+    } else {
+      this.grid.forEach((row) =>
+        row.forEach(
+          (cell) => (cell.isMoist = cell.isMoist && !cell.driedYesterday)
+        )
+      );
+    }
+    this.grid.forEach((row) =>
+      row.forEach((cell) => (cell.driedYesterday = !cell.isMoist))
+    );
+  }
+
+  updateCellColors(){
+    this.grid.forEach((row) => row.forEach((cell) => {
+      if (cell.plant != null){
+        cell.color = cell.plant!.color;
+      }}));
+      
+  }
+
+  //placing any update functions here
+  updateGame() {
+    this.updateWeather();
+    this.updateWeatherUI();
+    this.updateMoisture();
   }
 }
-//hopefully this works as a plant holder
-const availablePlans: Plant[] = [
-  new Plant(game, "Sunflower", 3, 2),
-  new Plant(game, "Rose", 2, 3),
-];
+
+//------------------------------------ Helper Funcs ------------------------------------------------------------------------------------
+
+function getColor(type: string): string {
+  switch (type) {
+    case "flower":
+      return "pink";
+    case "weed":
+      return "green";
+    case "empty":
+      return "#563d2d";
+    default:
+      return "#563d2d";
+  }
+}
+
+// Draw game
+function drawGame() {
+  ctx!.clearRect(0, 0, gameWidth, gameHeight);
+  game.draw();
+  farmer.draw();
+
+  const weatherElement = document.getElementById("weather");
+  if (weatherElement) {
+    weatherElement.textContent = `Current Weather: ${
+      game.weather.charAt(0).toUpperCase() + game.weather.slice(1)
+    }`;
+  }
+}
+
+//------------------------------------ Event Listeners ------------------------------------------------------------------------------------
+
 
 //character movement and controls
 document.addEventListener("keydown", (event) => {
@@ -269,13 +279,45 @@ document.addEventListener("keydown", (event) => {
       farmer.y += 10;
       break;
     case " ":
-      if (confirm("Do you want to log the current cell?")) {
-        logCurrentCell();
+      const currentCell = farmer.getCurrentCell();
+      if (currentCell!.plant != null){ // if there is a plant here, reap it (Weeds and Flowers)
+        farmer.plants.push(currentCell!.plant);
+        currentCell!.plant = null; //remove plant fom cell
+        currentCell!.color = "saddlebrown";
+      }else{
+        alert("There is no plant here!");
       }
+
       break;
   }
   drawGame();
 });
+
+//------------------------------------ Main ------------------------------------------------------------------------------------
+
+
+const game = new Game(7,7);
+setInterval(() => {
+  game.updateGame();
+  drawGame();
+}, 10000);
+
+
+const farmer = new Character(
+  gameWidth / 2 - 35,
+  gameHeight / 2 - 35,
+  40,
+  70,
+  "black",
+  []
+);
+
+//hopefully this works as a plant holder
+const availablePlans: Plant[] = [
+  new Plant("Sunflower", "flower", 3, 2, "yellow"),
+  new Plant("Rose", "flower", 2, 3, "pink"),
+];
+
 
 drawGame();
 
