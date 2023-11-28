@@ -76,7 +76,7 @@ class Character {
 }
 
 const farmer = new Character(gameWidth / 2 - 35, gameHeight / 2 - 35, 40, 70, "black");
-const gameGrid = new Grid(5, 5);
+const gameGrid = new Grid(4, 4);
 
 // Draw game
 function drawGame() {
