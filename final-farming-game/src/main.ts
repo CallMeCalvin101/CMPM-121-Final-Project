@@ -6,15 +6,62 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 
-document.querySelector<HTMLDivElement>(
-  "#ui"
-)!.innerHTML = `<p> Initialize Game </p>`;
+class Cell {
+  isMoist: boolean;
+  plant: string | null;
+  growthLevel: number;
+  driedYesterday: boolean;
+
+  constructor() {
+    this.isMoist = false;
+    this.plant = null; // 'flower', 'weed', or null
+    this.growthLevel = 0;
+    this.driedYesterday = false;
+  }
+}
+
+class Game {
+  grid: Cell[][];
+  weather: string; // 'sunny' or 'rainy'
+
+  constructor() {
+    this.grid = Array.from({ length: 4 }, () => Array.from({ length: 4 }, () => new Cell()));
+    this.weather = 'sunny'; // 'sunny' or 'rainy'
+    this.updateWeatherUI();
+  }
+
+  updateWeather() {
+    this.weather = Math.random() < 0.7 ? 'sunny' : 'rainy'; // 70% chance of sun
+  }
+
+  updateWeatherUI() {
+    const weatherElement = document.getElementById("weather");
+    if (weatherElement) {
+      weatherElement.textContent = `Current Weather: ${this.weather.charAt(0).toUpperCase() + this.weather.slice(1)}`;
+    }
+  }
+
+  updateMoisture() {
+    if (this.weather === 'rainy') {
+      this.grid.forEach(row => row.forEach(cell => cell.isMoist = true));
+    } else {
+      this.grid.forEach(row => row.forEach(cell => cell.isMoist = cell.isMoist && !cell.driedYesterday));
+    }
+    this.grid.forEach(row => row.forEach(cell => cell.driedYesterday = !cell.isMoist));
+  }
+
+  updateGame() {
+    this.updateWeather();
+    this.updateWeatherUI();
+    this.updateMoisture();
+  }
+}
 
 class Grid {
-  private cells: string[][];
+  private cells: Cell[][];
 
   constructor(public rows: number, public cols: number) {
-    this.cells = new Array(rows).fill(null).map(() => new Array(cols).fill("empty"));
+    this.cells = Array.from({ length: rows }, () => Array.from({ length: cols }, () => new Cell()));
     this.generateRandomGrid();
   }
 
@@ -23,13 +70,9 @@ class Grid {
       for (let j = 0; j < this.cols; j++) {
         const randomValue = Math.random();
         if (randomValue < 0.25) {
-          this.cells[i][j] = "plant";
+          this.cells[i][j].plant = "flower";
         } else if (randomValue < 0.5) {
-          this.cells[i][j] = "water";
-        } else if (randomValue < 0.75) {
-          this.cells[i][j] = "sun";
-        } else {
-          this.cells[i][j] = "empty";
+          this.cells[i][j].plant = "weed";
         }
       }
     }
@@ -42,9 +85,9 @@ class Grid {
       for (let j = 0; j < this.cols; j++) {
         const x = j * cellSize;
         const y = i * cellSize;
-        const cellType = this.cells[i][j];
+        const cell = this.cells[i][j];
 
-        ctx!.fillStyle = getColor(cellType);
+        ctx!.fillStyle = getColor(cell.plant || "empty");
         ctx!.fillRect(x, y, cellSize, cellSize);
       }
     }
@@ -53,12 +96,10 @@ class Grid {
 
 function getColor(type: string): string {
   switch (type) {
-    case "plant":
+    case "flower":
+      return "pink";
+    case "weed":
       return "green";
-    case "water":
-      return "blue";
-    case "sun":
-      return "yellow";
     case "empty":
       return "#563d2d";
     default:
@@ -77,12 +118,22 @@ class Character {
 
 const farmer = new Character(gameWidth / 2 - 35, gameHeight / 2 - 35, 40, 70, "black");
 const gameGrid = new Grid(4, 4);
+const game = new Game();
+setInterval(() => {
+  game.updateGame();
+  drawGame();
+}, 10000);
 
 // Draw game
 function drawGame() {
   ctx!.clearRect(0, 0, gameWidth, gameHeight);
   gameGrid.draw();
   farmer.draw();
+
+  const weatherElement = document.getElementById("weather");
+  if (weatherElement) {
+    weatherElement.textContent = `Current Weather: ${game.weather.charAt(0).toUpperCase() + game.weather.slice(1)}`;
+  }
 }
 
 document.addEventListener("keydown", (event) => {

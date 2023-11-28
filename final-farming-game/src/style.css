@@ -99,3 +99,8 @@ button:focus-visible {
 canvas {
   background-color: #eeeeee;
 }
+
+#weather {
+  font-size: 16px;
+  color: #1576dd;
+}
