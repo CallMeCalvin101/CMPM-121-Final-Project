@@ -6,6 +6,8 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 
+
+
 class Cell {
   isMoist: boolean;
   plant: string | null;
@@ -145,18 +147,19 @@ class Plant {
   sunLevel: number;
   waterLevel: number;
   growthLevel: number;
-
+  name: string;
   game: Game;
   cell: Cell | null; // can be null because it hasn't been planted yet
   //for constructing a plant, 
   sunRequisite: number;
   waterRequisite: number;
-  constructor(game: Game,sunRequisite: number, waterRequisite: number) {
+  constructor(game: Game,name:string,sunRequisite: number, waterRequisite: number) {
     this.sunLevel = 0;
     this.waterLevel = 0;
     this.growthLevel = 0;
     this.game = game;
     this.cell = null;
+    this.name = name;
     this.sunRequisite = sunRequisite;
     this.waterRequisite = waterRequisite;
   }
@@ -215,6 +218,12 @@ function logCurrentCell() {
     console.log("Cell Info:", currentCell);
   }
 }
+//hopefully this works as a plant holder
+const availablePlans: Plant[] = [
+  new Plant(game, "Sunflower", 3, 2),
+  new Plant(game, "Rose", 2, 3),
+];
+
 //character movement and controls
 document.addEventListener("keydown", (event) => {
   switch (event.key) {
