@@ -11,12 +11,14 @@ class Cell {
   plant: string | null;
   growthLevel: number;
   driedYesterday: boolean;
+  plantPot: Plant | null;
 
   constructor() {
     this.isMoist = false;
     this.plant = null; // 'flower', 'weed', or null
     this.growthLevel = 0;
     this.driedYesterday = false;
+    this.plantPot = null;
   }
 }
 
