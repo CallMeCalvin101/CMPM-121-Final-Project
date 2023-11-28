@@ -20,6 +20,8 @@ class Cell {
   }
 }
 
+
+
 class Game {
   grid: Cell[][];
   weather: string; // 'sunny' or 'rainy'
@@ -135,6 +137,70 @@ function drawGame() {
     weatherElement.textContent = `Current Weather: ${game.weather.charAt(0).toUpperCase() + game.weather.slice(1)}`;
   }
 }
+
+class Plant {
+  //plant's current level of resources
+  sunLevel: number;
+  waterLevel: number;
+  growthLevel: number;
+
+  game: Game;
+  cell: Cell | null; // can be null because it hasn't been planted yet
+  //for constructing a plant, 
+  sunRequisite: number;
+  waterRequisite: number;
+  constructor(game: Game,sunRequisite: number, waterRequisite: number) {
+    this.sunLevel = 0;
+    this.waterLevel = 0;
+    this.growthLevel = 0;
+    this.game = game;
+    this.cell = null;
+    this.sunRequisite = sunRequisite;
+    this.waterRequisite = waterRequisite;
+  }
+  waterPlant(): void {
+    // Simulate the effect of watering based on the isMoist property of the cell
+    //put a bang here cause "cell might be null"
+    if (this.cell!.isMoist && Math.random() < 0.7) {
+      this.waterLevel += 1;
+      console.log('Plant watered! Water level:', this.waterLevel);
+    } else {
+      console.log('Watering failed. Water level remains the same.');
+    }
+  }
+
+
+  exposeToSun() {
+    // Simulate the effect of exposure to sun based on the game's weather
+    const sunChance = this.game.weather === 'sunny' ? 0.8 : 0.2;
+    
+    if (Math.random() < sunChance) {
+      this.sunLevel += 1;
+      console.log('Plant exposed to sun! Sun level:', this.sunLevel);
+    } else {
+      console.log('Exposure to sun failed. Sun level remains the same.');
+    }
+  }
+
+  grow(): void {
+    // Simulate general growth based on accumulated sun and water levels
+    if (this.sunLevel >= this.sunRequisite && this.waterLevel >= this.waterRequisite) {
+      this.growthLevel += 1;
+      console.log('Plant is growing! Growth level:', this.growthLevel);
+    } else {
+      console.log('No significant growth due to insufficient sun or water.');
+    }
+  }
+
+  checkGrowth() {
+    // Check conditions and trigger growth accordingly
+    this.waterPlant();
+    this.exposeToSun();
+    this.grow();
+  }
+}
+
+
 //for debugging purposes, logs the cell and its properties
 function logCurrentCell() {
   const cellSize = gameWidth / gameGrid.cols;
