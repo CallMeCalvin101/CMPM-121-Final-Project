@@ -29,18 +29,18 @@ class Game {
     this.weather = 'sunny'; // 'sunny' or 'rainy'
     this.updateWeatherUI();
   }
-
+//randomly change the weather conditions
   updateWeather() {
     this.weather = Math.random() < 0.7 ? 'sunny' : 'rainy'; // 70% chance of sun
   }
-
+//update the weather condition text on screen
   updateWeatherUI() {
     const weatherElement = document.getElementById("weather");
     if (weatherElement) {
       weatherElement.textContent = `Current Weather: ${this.weather.charAt(0).toUpperCase() + this.weather.slice(1)}`;
     }
   }
-
+//update the moisture of all grids
   updateMoisture() {
     if (this.weather === 'rainy') {
       this.grid.forEach(row => row.forEach(cell => cell.isMoist = true));
@@ -49,7 +49,7 @@ class Game {
     }
     this.grid.forEach(row => row.forEach(cell => cell.driedYesterday = !cell.isMoist));
   }
-
+//placing any update functions here
   updateGame() {
     this.updateWeather();
     this.updateWeatherUI();
@@ -58,7 +58,7 @@ class Game {
 }
 
 class Grid {
-  private cells: Cell[][];
+  public cells: Cell[][];
 
   constructor(public rows: number, public cols: number) {
     this.cells = Array.from({ length: rows }, () => Array.from({ length: cols }, () => new Cell()));
@@ -117,7 +117,7 @@ class Character {
 }
 
 const farmer = new Character(gameWidth / 2 - 35, gameHeight / 2 - 35, 40, 70, "black");
-const gameGrid = new Grid(4, 4);
+const gameGrid = new Grid(7, 7);
 const game = new Game();
 setInterval(() => {
   game.updateGame();
@@ -135,7 +135,19 @@ function drawGame() {
     weatherElement.textContent = `Current Weather: ${game.weather.charAt(0).toUpperCase() + game.weather.slice(1)}`;
   }
 }
+//for debugging purposes, logs the cell and its properties
+function logCurrentCell() {
+  const cellSize = gameWidth / gameGrid.cols;
+  const gridX = Math.floor(farmer.x / cellSize);
+  const gridY = Math.floor(farmer.y / cellSize);
 
+  if (gameGrid.cells[gridY] && gameGrid.cells[gridY][gridX]) {
+    const currentCell = gameGrid.cells[gridY][gridX];
+    console.log(`Player is standing on cell at (${gridX}, ${gridY})`);
+    console.log("Cell Info:", currentCell);
+  }
+}
+//character movement and controls
 document.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "ArrowLeft":
@@ -150,8 +162,14 @@ document.addEventListener("keydown", (event) => {
     case "ArrowDown":
       farmer.y += 10;
       break;
+    case " ":
+      if (confirm("Do you want to log the current cell?")) {
+        logCurrentCell();
+      }
+      break;
   }
   drawGame();
 });
+
 
 drawGame();
