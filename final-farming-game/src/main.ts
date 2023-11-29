@@ -84,12 +84,13 @@ class Plant {
     type: string,
     sunRequisite: number,
     waterRequisite: number,
+    growthLevel: number,
     color: string,
     cell: Cell
   ) {
     this.sunLevel = 0;
     this.waterLevel = 0;
-    this.growthLevel = 0;
+    this.growthLevel = growthLevel;
     this.cell = cell;
     this.name = name;
     this.sunRequisite = sunRequisite;
@@ -104,9 +105,9 @@ class Plant {
       if (this.cell!.waterLevel > 0) {
         this.waterLevel += 1;
         this.cell!.waterLevel--;
-        console.log("Plant watered! Water level:", this.waterLevel);
+        console.log(this.name, " watered! Water level:", this.waterLevel);
       } else {
-        console.log("Watering failed. Water level remains the same.");
+        console.log(this.name, " watering failed. Water level remains the same.");
       }
     }
   }
@@ -117,9 +118,9 @@ class Plant {
       if (this.cell!.sunLevel) {
         this.sunLevel += 1;
         this.cell!.sunLevel = false;
-        console.log("Plant exposed to sun! Sun level:", this.sunLevel);
+        console.log(this.name, " exposed to sun! Sun level:", this.sunLevel);
       } else {
-        console.log("Exposure to sun failed. Sun level remains the same.");
+        console.log(this.name , " exposure to sun failed. Sun level remains the same.");
       }
     }
   }
@@ -131,16 +132,16 @@ class Plant {
       this.waterLevel >= this.waterRequisite
     ) {
       this.growthLevel += 1;
-      console.log("Plant is growing! Growth level:", this.growthLevel);
+      console.log(this.name, " is growing! Growth level:", this.growthLevel);
     } else if (
       this.sunLevel < this.sunRequisite &&
       this.waterLevel < this.waterRequisite
     ) {
-      console.log("No significant growth due to insufficient sun and water.");
+      console.log(this.name, ": No significant growth due to insufficient sun and water.");
     } else if (this.sunLevel < this.sunRequisite) {
-      console.log("No significant growth due to insufficient sun.");
+      console.log(this.name, ": No significant growth due to insufficient sun.");
     } else if (this.waterLevel < this.waterRequisite) {
-      console.log("No significant growth due to insufficient water.");
+      console.log(this.name, ": No significant growth due to insufficient water.");
     }
     //   console.log("No significant growth due to insufficient sun or water.");
   }
@@ -174,10 +175,10 @@ class Game {
       for (let j = 0; j < this.cols; j++) {
         const randomValue = Math.random();
         if (randomValue < 0.25) {
-          this.grid[i][j].plant = new Plant("Rose", "flower", 3, 2, "pink", this.grid[i][j]);
+          this.grid[i][j].plant = new Plant("Rose", "flower", 3, 2, 2, "pink", this.grid[i][j]);
           this.grid[i][j].color = "pink";
         } else if (randomValue < 0.5) {
-          this.grid[i][j].plant = new Plant("Crabgrass", "weed", 1, 1, "green", this.grid[i][j],);
+          this.grid[i][j].plant = new Plant("Crabgrass", "weed", 1, 1, 1, "green", this.grid[i][j],);
           this.grid[i][j].color = "green";
         }
       }
@@ -293,8 +294,8 @@ function drawGame() {
 }
 
 const availablePlants: Plant[] = [
-  new Plant("Sunflower", "flower", 3, 2, "yellow", new Cell()),
-  new Plant("Rose", "flower", 2, 3, "pink", new Cell()),
+  new Plant("Sunflower", "flower", 3, 2, 3, "yellow", new Cell()),
+  new Plant("Rose", "flower", 2, 3, 2, "pink", new Cell()),
 ];
 
 function promptPlantSelection(): string {
@@ -329,7 +330,7 @@ function updateScenario(action: string) {
   }
 
   if (testScenario.checkTargetMet()) {
-    console.log("SCENARIO COMPLETE!!!");
+    alert("SCENARIO COMPLETE!!!");
   }
 }
 
@@ -379,6 +380,7 @@ document.addEventListener("keydown", (event) => {
             selectedPlant.type,
             selectedPlant.sunRequisite,
             selectedPlant.waterRequisite,
+            selectedPlant.growthLevel,
             selectedPlant.color,
             currentCell!
           );
