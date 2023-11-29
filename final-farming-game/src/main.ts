@@ -84,12 +84,13 @@ class Plant {
     type: string,
     sunRequisite: number,
     waterRequisite: number,
-    color: string
+    color: string,
+    cell: Cell
   ) {
     this.sunLevel = 0;
     this.waterLevel = 0;
     this.growthLevel = 0;
-    this.cell = null;
+    this.cell = cell;
     this.name = name;
     this.sunRequisite = sunRequisite;
     this.waterRequisite = waterRequisite;
@@ -173,10 +174,10 @@ class Game {
       for (let j = 0; j < this.cols; j++) {
         const randomValue = Math.random();
         if (randomValue < 0.25) {
-          this.grid[i][j].plant = new Plant("Rose", "flower", 3, 2, "pink");
+          this.grid[i][j].plant = new Plant("Rose", "flower", 3, 2, "pink", this.grid[i][j]);
           this.grid[i][j].color = "pink";
         } else if (randomValue < 0.5) {
-          this.grid[i][j].plant = new Plant("Crabgrass", "weed", 1, 1, "green");
+          this.grid[i][j].plant = new Plant("Crabgrass", "weed", 1, 1, "green", this.grid[i][j],);
           this.grid[i][j].color = "green";
         }
       }
@@ -292,8 +293,8 @@ function drawGame() {
 }
 
 const availablePlants: Plant[] = [
-  new Plant("Sunflower", "flower", 3, 2, "yellow"),
-  new Plant("Rose", "flower", 2, 3, "pink"),
+  new Plant("Sunflower", "flower", 3, 2, "yellow", new Cell()),
+  new Plant("Rose", "flower", 2, 3, "pink", new Cell()),
 ];
 
 function promptPlantSelection(): string {
@@ -369,7 +370,8 @@ document.addEventListener("keydown", (event) => {
             selectedPlant.type,
             selectedPlant.sunRequisite,
             selectedPlant.waterRequisite,
-            selectedPlant.color
+            selectedPlant.color,
+            currentCell!
           );
           currentCell!.color = selectedPlant.color;
           farmer.getCurrentCell();
