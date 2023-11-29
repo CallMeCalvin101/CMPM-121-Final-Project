@@ -99,23 +99,27 @@ class Plant {
   waterPlant(): void {
     // Simulate the effect of watering based on the isMoist property of the cell
     //put a bang here cause "cell might be null"
-    if (this.cell!.waterLevel > 0) {
-      this.waterLevel += 1;
-      this.cell!.waterLevel--;
-      console.log("Plant watered! Water level:", this.waterLevel);
-    } else {
-      console.log("Watering failed. Water level remains the same.");
+    if(this.cell){
+      if (this.cell!.waterLevel > 0) {
+        this.waterLevel += 1;
+        this.cell!.waterLevel--;
+        console.log("Plant watered! Water level:", this.waterLevel);
+      } else {
+        console.log("Watering failed. Water level remains the same.");
+      }
     }
   }
 
   exposeToSun() {
     // Simulate the effect of exposure to sun based on the game's weather
-    if (this.cell!.sunLevel) {
-      this.sunLevel += 1;
-      this.cell!.sunLevel = false;
-      console.log("Plant exposed to sun! Sun level:", this.sunLevel);
-    } else {
-      console.log("Exposure to sun failed. Sun level remains the same.");
+    if(this.cell){
+      if (this.cell!.sunLevel) {
+        this.sunLevel += 1;
+        this.cell!.sunLevel = false;
+        console.log("Plant exposed to sun! Sun level:", this.sunLevel);
+      } else {
+        console.log("Exposure to sun failed. Sun level remains the same.");
+      }
     }
   }
 
@@ -127,11 +131,16 @@ class Plant {
     ) {
       this.growthLevel += 1;
       console.log("Plant is growing! Growth level:", this.growthLevel);
-    } else {
-      console.log("No significant growth due to insufficient sun or water.");
+    } else if(this.sunLevel < this.sunRequisite &&
+      this.waterLevel < this.waterRequisite) {
+        console.log("No significant growth due to insufficient sun and water.");
+    } else if(this.sunLevel < this.sunRequisite){
+      console.log("No significant growth due to insufficient sun.");
+    }else if(this.waterLevel < this.waterRequisite){
+      console.log("No significant growth due to insufficient water.");
     }
+    //   console.log("No significant growth due to insufficient sun or water.");
   }
-
   checkGrowth() {
     // Check conditions and trigger growth accordingly
     this.waterPlant();
@@ -208,7 +217,7 @@ class Game {
       const sunChance = 0.2;
       this.grid.forEach((row) => row.forEach((cell) => {
         if((cell.waterLevel < 3) && (Math.random() < 0.7)){
-          cell.waterLevel++;
+          cell.waterLevel+=2;
         }
         if(Math.random() < sunChance){
           cell.sunLevel = true;
@@ -221,7 +230,7 @@ class Game {
       this.grid.forEach((row) =>
         row.forEach(
           (cell) => {
-            if(cell.waterLevel > 0){
+            if((cell.waterLevel > 0) && (Math.random() < 0.7)){
               cell.waterLevel--;
             }
             if(Math.random() < sunChance){
@@ -356,6 +365,12 @@ document.addEventListener("keydown", (event) => {
 const game = new Game(7,7);
 setInterval(() => {
   game.updateGame();
+  game.grid.forEach((row) => row.forEach((cell) => {
+    if(cell.plant){
+      cell.plant.checkGrowth();
+    }
+    
+  }));
   drawGame();
 }, 10000);
 
