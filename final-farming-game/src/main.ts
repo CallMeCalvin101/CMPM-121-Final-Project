@@ -369,7 +369,6 @@ setInterval(() => {
     if(cell.plant){
       cell.plant.checkGrowth();
     }
-    
   }));
   drawGame();
 }, 10000);
