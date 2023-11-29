@@ -1,7 +1,6 @@
 import "./style.css";
 import { Scenario } from "./scenario.ts";
 
-
 //------------------------------------ Global Vars ------------------------------------------------------------------------------------
 
 const canvas = document.getElementById("game");
@@ -9,6 +8,7 @@ const gameHeight = (canvas! as HTMLCanvasElement).height;
 const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
+const testScenario = new Scenario("Sunflower", 3);
 
 //------------------------------------ Class def ------------------------------------------------------------------------------------
 
@@ -93,13 +93,13 @@ class Plant {
     this.name = name;
     this.sunRequisite = sunRequisite;
     this.waterRequisite = waterRequisite;
-    this.type= type;
+    this.type = type;
     this.color = color;
   }
   waterPlant(): void {
     // Simulate the effect of watering based on the isMoist property of the cell
     //put a bang here cause "cell might be null"
-    if(this.cell){
+    if (this.cell) {
       if (this.cell!.waterLevel > 0) {
         this.waterLevel += 1;
         this.cell!.waterLevel--;
@@ -112,7 +112,7 @@ class Plant {
 
   exposeToSun() {
     // Simulate the effect of exposure to sun based on the game's weather
-    if(this.cell){
+    if (this.cell) {
       if (this.cell!.sunLevel) {
         this.sunLevel += 1;
         this.cell!.sunLevel = false;
@@ -131,12 +131,14 @@ class Plant {
     ) {
       this.growthLevel += 1;
       console.log("Plant is growing! Growth level:", this.growthLevel);
-    } else if(this.sunLevel < this.sunRequisite &&
-      this.waterLevel < this.waterRequisite) {
-        console.log("No significant growth due to insufficient sun and water.");
-    } else if(this.sunLevel < this.sunRequisite){
+    } else if (
+      this.sunLevel < this.sunRequisite &&
+      this.waterLevel < this.waterRequisite
+    ) {
+      console.log("No significant growth due to insufficient sun and water.");
+    } else if (this.sunLevel < this.sunRequisite) {
       console.log("No significant growth due to insufficient sun.");
-    }else if(this.waterLevel < this.waterRequisite){
+    } else if (this.waterLevel < this.waterRequisite) {
       console.log("No significant growth due to insufficient water.");
     }
     //   console.log("No significant growth due to insufficient sun or water.");
@@ -171,12 +173,11 @@ class Game {
       for (let j = 0; j < this.cols; j++) {
         const randomValue = Math.random();
         if (randomValue < 0.25) {
-          this.grid[i][j].plant = new Plant("Rose", "flower", 3 , 2, "pink") ;
-          this.grid[i][j].color = "pink"
-
+          this.grid[i][j].plant = new Plant("Rose", "flower", 3, 2, "pink");
+          this.grid[i][j].color = "pink";
         } else if (randomValue < 0.5) {
           this.grid[i][j].plant = new Plant("Crabgrass", "weed", 1, 1, "green");
-          this.grid[i][j].color = "green"
+          this.grid[i][j].color = "green";
         }
       }
     }
@@ -195,7 +196,6 @@ class Game {
         ctx!.fillRect(x, y, cellSize, cellSize);
       }
     }
-    
   }
 
   //randomly change the weather conditions
@@ -215,41 +215,43 @@ class Game {
   updateCells() {
     if (this.weather === "rainy") {
       const sunChance = 0.2;
-      this.grid.forEach((row) => row.forEach((cell) => {
-        if((cell.waterLevel < 3) && (Math.random() < 0.7)){
-          cell.waterLevel+=2;
-        }
-        if(Math.random() < sunChance){
-          cell.sunLevel = true;
-        }else{
-          cell.sunLevel = false;
-        }
-      }));
+      this.grid.forEach((row) =>
+        row.forEach((cell) => {
+          if (cell.waterLevel < 3 && Math.random() < 0.7) {
+            cell.waterLevel += 2;
+          }
+          if (Math.random() < sunChance) {
+            cell.sunLevel = true;
+          } else {
+            cell.sunLevel = false;
+          }
+        })
+      );
     } else {
       const sunChance = 0.8;
       this.grid.forEach((row) =>
-        row.forEach(
-          (cell) => {
-            if((cell.waterLevel > 0) && (Math.random() < 0.7)){
-              cell.waterLevel--;
-            }
-            if(Math.random() < sunChance){
-              cell.sunLevel = true;
-            }else{
-              cell.sunLevel = false;
-            }
+        row.forEach((cell) => {
+          if (cell.waterLevel > 0 && Math.random() < 0.7) {
+            cell.waterLevel--;
           }
-        )
+          if (Math.random() < sunChance) {
+            cell.sunLevel = true;
+          } else {
+            cell.sunLevel = false;
+          }
+        })
       );
     }
   }
 
-  updateCellColors(){
-    this.grid.forEach((row) => row.forEach((cell) => {
-      if (cell.plant != null){
-        cell.color = cell.plant!.color;
-      }}));
-      
+  updateCellColors() {
+    this.grid.forEach((row) =>
+      row.forEach((cell) => {
+        if (cell.plant != null) {
+          cell.color = cell.plant!.color;
+        }
+      })
+    );
   }
 
   //placing any update functions here
@@ -295,26 +297,42 @@ const availablePlants: Plant[] = [
 ];
 
 function promptPlantSelection(): string {
-  const plantNames = availablePlants.map((plant) => plant.name).join(', ');
+  const plantNames = availablePlants.map((plant) => plant.name).join(", ");
   const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
-  return prompt(promptText) || ''; // Prompt the player for the plant name
+  return prompt(promptText) || ""; // Prompt the player for the plant name
 }
 
 function reapPlant(currentCell: Cell) {
-  
-    const confirmReap = window.confirm(`Do you want to reap the ${currentCell.plant!.name} plant?\nDetails:\nSun Level: ${currentCell.plant!.sunLevel}, Water Level: ${currentCell.plant!.waterLevel}, Growth Level: ${currentCell.plant!.growthLevel}`);
-    
-    if (confirmReap) {
-      farmer.plants.push(currentCell.plant!);
-      const reapedPlant = currentCell.plant!.name;
-      currentCell.plant = null; // Remove plant from cell
-      currentCell.color = "saddlebrown";
-      console.log(`You reaped the ${reapedPlant} plant!`);
-    }
+  const confirmReap = window.confirm(
+    `Do you want to reap the ${
+      currentCell.plant!.name
+    } plant?\nDetails:\nSun Level: ${
+      currentCell.plant!.sunLevel
+    }, Water Level: ${currentCell.plant!.waterLevel}, Growth Level: ${
+      currentCell.plant!.growthLevel
+    }`
+  );
+
+  if (confirmReap) {
+    farmer.plants.push(currentCell.plant!);
+    const reapedPlant = currentCell.plant!.name;
+    currentCell.plant = null; // Remove plant from cell
+    currentCell.color = "saddlebrown";
+    console.log(`You reaped the ${reapedPlant} plant!`);
+  }
+}
+
+function updateScenario(action: string) {
+  if (testScenario.checkCondition(action)) {
+    testScenario.increaseVal(1);
   }
 
-//------------------------------------ Event Listeners ------------------------------------------------------------------------------------
+  if (testScenario.checkTargetMet()) {
+    console.log("SCENARIO COMPLETE!!!");
+  }
+}
 
+//------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 //character movement and controls
 document.addEventListener("keydown", (event) => {
@@ -333,24 +351,34 @@ document.addEventListener("keydown", (event) => {
       break;
     case " ":
       const currentCell = farmer.getCurrentCell();
-      if (currentCell!.plant != null && currentCell){ // if there is a plant here, reap it (Weeds and Flowers)
-      reapPlant(currentCell);
-      console.log(farmer.plants);
+      if (currentCell!.plant != null && currentCell) {
+        // if there is a plant here, reap it (Weeds and Flowers)
+        reapPlant(currentCell);
+        console.log(farmer.plants);
         // farmer.plants.push(currentCell!.plant);
         // currentCell!.plant = null; //remove plant fom cell
         // currentCell!.color = "saddlebrown";
-      }else if (currentCell!.plant == null){
+      } else if (currentCell!.plant == null) {
         const plantName = promptPlantSelection();
-        const selectedPlant = availablePlants.find((plant) => plant.name.toLowerCase() === plantName.toLowerCase());
+        const selectedPlant = availablePlants.find(
+          (plant) => plant.name.toLowerCase() === plantName.toLowerCase()
+        );
         if (selectedPlant) {
-          currentCell!.plant = (new Plant(selectedPlant.name, selectedPlant.type,selectedPlant.sunRequisite, selectedPlant.waterRequisite,selectedPlant.color));
+          currentCell!.plant = new Plant(
+            selectedPlant.name,
+            selectedPlant.type,
+            selectedPlant.sunRequisite,
+            selectedPlant.waterRequisite,
+            selectedPlant.color
+          );
           currentCell!.color = selectedPlant.color;
           farmer.getCurrentCell();
+          // Scenario Check (Remove in future)
+          updateScenario(selectedPlant.name);
         } else {
-          console.log('Invalid plant selection.');
+          console.log("Invalid plant selection.");
         }
-      }
-      else{
+      } else {
         alert("No plants available!");
       }
 
@@ -361,18 +389,18 @@ document.addEventListener("keydown", (event) => {
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
 
-
-const game = new Game(7,7);
+const game = new Game(7, 7);
 setInterval(() => {
   game.updateGame();
-  game.grid.forEach((row) => row.forEach((cell) => {
-    if(cell.plant){
-      cell.plant.checkGrowth();
-    }
-  }));
+  game.grid.forEach((row) =>
+    row.forEach((cell) => {
+      if (cell.plant) {
+        cell.plant.checkGrowth();
+      }
+    })
+  );
   drawGame();
 }, 10000);
-
 
 const farmer = new Character(
   gameWidth / 2 - 35,
@@ -384,8 +412,6 @@ const farmer = new Character(
 );
 
 //hopefully this works as a plant holder
-
-
 
 drawGame();
 
