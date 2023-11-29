@@ -338,6 +338,15 @@ function updateScenario(action: string) {
 //character movement and controls
 document.addEventListener("keydown", (event) => {
   switch (event.key) {
+    case "t":
+      game.updateGame();
+      game.grid.forEach((row) =>
+        row.forEach((cell) => {
+          if (cell.plant) {
+            cell.plant.checkGrowth();
+        }
+      }));
+      break;
     case "ArrowLeft":
       farmer.x -= 10;
       break;
@@ -383,14 +392,6 @@ document.addEventListener("keydown", (event) => {
       } else {
         alert("No plants available!");
       }
-      game.grid.forEach((row) =>
-        row.forEach((cell) => {
-          if (cell.plant) {
-            cell.plant.checkGrowth();
-        }
-      })
-  );
-
       break;
   }
   drawGame();
