@@ -43,7 +43,8 @@ class Character {
 }
 
 class Cell {
-  isMoist: boolean;
+  waterLevel: number;
+  sunLevel: boolean;
   plant: Plant | null;
   growthLevel: number;
   driedYesterday: boolean;
@@ -51,7 +52,8 @@ class Cell {
   color: string;
 
   constructor() {
-    this.isMoist = false;
+    this.waterLevel = 0;
+    this.sunLevel = false;
     this.plant = null;
     this.growthLevel = 0;
     this.driedYesterday = false;
@@ -97,8 +99,9 @@ class Plant {
   waterPlant(): void {
     // Simulate the effect of watering based on the isMoist property of the cell
     //put a bang here cause "cell might be null"
-    if (this.cell!.isMoist && Math.random() < 0.7) {
+    if (this.cell!.waterLevel > 0) {
       this.waterLevel += 1;
+      this.cell!.waterLevel--;
       console.log("Plant watered! Water level:", this.waterLevel);
     } else {
       console.log("Watering failed. Water level remains the same.");
@@ -107,10 +110,9 @@ class Plant {
 
   exposeToSun() {
     // Simulate the effect of exposure to sun based on the game's weather
-    const sunChance = game.weather === "sunny" ? 0.8 : 0.2;
-
-    if (Math.random() < sunChance) {
+    if (this.cell!.sunLevel) {
       this.sunLevel += 1;
+      this.cell!.sunLevel = false;
       console.log("Plant exposed to sun! Sun level:", this.sunLevel);
     } else {
       console.log("Exposure to sun failed. Sun level remains the same.");
@@ -200,20 +202,37 @@ class Game {
       }`;
     }
   }
-  //update the moisture of all grids
-  updateMoisture() {
+  //update the cells of all grids
+  updateCells() {
     if (this.weather === "rainy") {
-      this.grid.forEach((row) => row.forEach((cell) => (cell.isMoist = true)));
+      const sunChance = 0.2;
+      this.grid.forEach((row) => row.forEach((cell) => {
+        if((cell.waterLevel < 3) && (Math.random() < 0.7)){
+          cell.waterLevel++;
+        }
+        if(Math.random() < sunChance){
+          cell.sunLevel = true;
+        }else{
+          cell.sunLevel = false;
+        }
+      }));
     } else {
+      const sunChance = 0.8;
       this.grid.forEach((row) =>
         row.forEach(
-          (cell) => (cell.isMoist = cell.isMoist && !cell.driedYesterday)
+          (cell) => {
+            if(cell.waterLevel > 0){
+              cell.waterLevel--;
+            }
+            if(Math.random() < sunChance){
+              cell.sunLevel = true;
+            }else{
+              cell.sunLevel = false;
+            }
+          }
         )
       );
     }
-    this.grid.forEach((row) =>
-      row.forEach((cell) => (cell.driedYesterday = !cell.isMoist))
-    );
   }
 
   updateCellColors(){
@@ -228,7 +247,7 @@ class Game {
   updateGame() {
     this.updateWeather();
     this.updateWeatherUI();
-    this.updateMoisture();
+    this.updateCells();
   }
 }
 
