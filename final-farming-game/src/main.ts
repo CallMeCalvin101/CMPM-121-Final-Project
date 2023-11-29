@@ -214,11 +214,12 @@ class Game {
   }
   //update the cells of all grids
   updateCells() {
+    const waterChance = 0.7;
     if (this.weather === "rainy") {
       const sunChance = 0.2;
       this.grid.forEach((row) =>
         row.forEach((cell) => {
-          if (cell.waterLevel < 3 && Math.random() < 0.7) {
+          if (Math.random() < waterChance) {
             cell.waterLevel += 2;
           }
           if (Math.random() < sunChance) {
@@ -232,7 +233,7 @@ class Game {
       const sunChance = 0.8;
       this.grid.forEach((row) =>
         row.forEach((cell) => {
-          if (cell.waterLevel > 0 && Math.random() < 0.7) {
+          if (cell.waterLevel > 0 && Math.random() < waterChance) {
             cell.waterLevel--;
           }
           if (Math.random() < sunChance) {
