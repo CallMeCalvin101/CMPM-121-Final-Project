@@ -181,6 +181,8 @@ class Plant {
       if (this.growthLevel < MAX_PLANT_GROWTH){
         this.growthLevel += 1;
         console.log(this.name, " is growing! Growth level:", this.growthLevel);
+      }else{
+        console.log(this.name, "in cell: ", this.cell!.rowIndex, ", ", this.cell!.colIndex, " is ready for harvest!");
       }
     }
   }
@@ -347,11 +349,17 @@ function reapPlant(currentCell: Cell) {
   );
 
   if (confirmReap) {
-    farmer.plants.push(currentCell.plant!);
-    const reapedPlant = currentCell.plant!.name;
+    if (currentCell.plant!.type != "weed"){ // do not add weeds to inventory
+      farmer.plants.push(currentCell.plant!);
+      const reapedPlant = currentCell.plant!.name;
+      if (currentCell.plant!.growthLevel >= MAX_PLANT_GROWTH){ // player only collects plant if it was ready for harvest
+        plantsHarvested.set(reapedPlant, plantsHarvested.get(reapedPlant)! + 1);
+      }
+    }
+
+    console.log(`You reaped the ${currentCell.plant!.name} plant!`);
     currentCell.plant = null; // Remove plant from cell
-    console.log(`You reaped the ${reapedPlant} plant!`);
-    plantsHarvested.set(reapedPlant, plantsHarvested.get(reapedPlant)! + 1);
+
     game.updateUI();
   }
 }
@@ -398,7 +406,6 @@ document.addEventListener("keydown", (event) => {
       if (currentCell!.plant != null && currentCell) {
         // if there is a plant here, reap it (Weeds and Flowers)
         reapPlant(currentCell);
-        console.log(farmer.plants);
         // farmer.plants.push(currentCell!.plant);
         // currentCell!.plant = null; //remove plant fom cell
         // currentCell!.color = "saddlebrown";
