@@ -18,23 +18,44 @@ const CELL_SIZE = gameWidth / ROWS;
 
 class Character {
   constructor(
-    public x: number,
-    public y: number,
-    public width: number,
-    public height: number,
-    public color: string,
+    public posX: number,
+    public posY: number,
     public plants: Plant[]
   ) {}
 
   draw() {
-    ctx!.fillStyle = this.color;
-    ctx!.fillRect(this.x, this.y, this.width, this.height);
+    ctx!.beginPath();
+    ctx!.arc(this.posX, this.posY, 20, 0, 2 * Math.PI, false);
+    ctx!.fillStyle = "blue";
+    ctx!.fill();
+    ctx!.lineWidth = 2;
+    ctx!.strokeStyle = "black";
+    ctx!.stroke();
+  }
+
+  dragPos(direction: "N" | "E" | "S" | "W", magnitude: number){
+    switch (direction){
+      case "N":
+        this.posY -= magnitude;
+        break;
+      case "E":
+        this.posX += magnitude;
+        break;
+      case "S":
+        this.posY += magnitude;
+        break;
+      case "W":
+        this.posX -= magnitude;
+        break;
+
+    }
+    
   }
 
   //return the cell and its properties
   getCurrentCell() {
-    const gridX = Math.floor(farmer.x / CELL_SIZE);
-    const gridY = Math.floor(farmer.y / CELL_SIZE);
+    const gridX = Math.floor(farmer.posX / CELL_SIZE);
+    const gridY = Math.floor(farmer.posY / CELL_SIZE);
 
     if (game.grid[gridY] && game.grid[gridY][gridX]) {
       const currentCell = game.grid[gridY][gridX];
@@ -191,16 +212,6 @@ class Game {
       for (let j = 0; j < this.cols; j++) {
         const randomValue = Math.random();
         if (randomValue < 0.25) {
-          this.grid[i][j].plant = new Plant(
-            "Rose",
-            "flower",
-            3,
-            2,
-            "pink",
-            this.grid[i][j]
-          );
-          this.grid[i][j].color = "pink";
-        } else if (randomValue < 0.5) {
           this.grid[i][j].plant = new Plant(
             "Crabgrass",
             "weed",
@@ -399,19 +410,19 @@ document.addEventListener("keydown", (event) => {
       farmer.getCurrentCell();
       break;
     case "ArrowLeft":
-      farmer.x -= CELL_SIZE;
+      farmer.dragPos("W" ,CELL_SIZE);
       farmer.getCurrentCell();
       break;
     case "ArrowRight":
-      farmer.x += CELL_SIZE;
+      farmer.dragPos("E" ,CELL_SIZE);
       farmer.getCurrentCell();
       break;
     case "ArrowUp":
-      farmer.y -= CELL_SIZE;
+      farmer.dragPos("N" ,CELL_SIZE);
       farmer.getCurrentCell();
       break;
     case "ArrowDown":
-      farmer.y += CELL_SIZE;
+      farmer.dragPos("S" ,CELL_SIZE);
       farmer.getCurrentCell();
       break;
     case " ":
@@ -462,11 +473,8 @@ setInterval(() => {
 }, 10000);
 
 const farmer = new Character(
-  gameWidth / 2 - 35,
-  gameHeight / 2 - 35,
-  40,
-  70,
-  "black",
+  gameWidth / 2,
+  gameHeight / 2,
   []
 );
 
