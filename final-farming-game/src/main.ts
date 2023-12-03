@@ -10,6 +10,10 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
 
+const ROWS = 7;
+const COLS = 7;
+const CELL_SIZE = gameWidth / ROWS;
+
 //------------------------------------ Class def ------------------------------------------------------------------------------------
 
 class Character {
@@ -29,14 +33,12 @@ class Character {
 
   //return the cell and its properties
   getCurrentCell() {
-    const cellSize = gameWidth / game.cols;
-    const gridX = Math.floor(farmer.x / cellSize);
-    const gridY = Math.floor(farmer.y / cellSize);
+    const gridX = Math.floor(farmer.x / CELL_SIZE);
+    const gridY = Math.floor(farmer.y / CELL_SIZE);
 
     if (game.grid[gridY] && game.grid[gridY][gridX]) {
       const currentCell = game.grid[gridY][gridX];
-      console.log(`Player is standing on cell at (${gridX}, ${gridY})`);
-      console.log("Cell Info:", currentCell);
+      game.updateCellInfo(gridX, gridY, currentCell);
       return currentCell;
     }
   }
@@ -106,7 +108,10 @@ class Plant {
         this.cell!.waterLevel--;
         console.log(this.name, " watered! Water level:", this.waterLevel);
       } else {
-        console.log(this.name, " watering failed. Water level remains the same.");
+        console.log(
+          this.name,
+          " watering failed. Water level remains the same."
+        );
       }
     }
   }
@@ -119,7 +124,10 @@ class Plant {
         this.cell!.sunLevel = false;
         console.log(this.name, " exposed to sun! Sun level:", this.sunLevel);
       } else {
-        console.log(this.name , " exposure to sun failed. Sun level remains the same.");
+        console.log(
+          this.name,
+          " exposure to sun failed. Sun level remains the same."
+        );
       }
     }
   }
@@ -136,11 +144,20 @@ class Plant {
       this.sunLevel < this.sunRequisite &&
       this.waterLevel < this.waterRequisite
     ) {
-      console.log(this.name, ": No significant growth due to insufficient sun and water.");
+      console.log(
+        this.name,
+        ": No significant growth due to insufficient sun and water."
+      );
     } else if (this.sunLevel < this.sunRequisite) {
-      console.log(this.name, ": No significant growth due to insufficient sun.");
+      console.log(
+        this.name,
+        ": No significant growth due to insufficient sun."
+      );
     } else if (this.waterLevel < this.waterRequisite) {
-      console.log(this.name, ": No significant growth due to insufficient water.");
+      console.log(
+        this.name,
+        ": No significant growth due to insufficient water."
+      );
     }
     //   console.log("No significant growth due to insufficient sun or water.");
   }
@@ -174,10 +191,24 @@ class Game {
       for (let j = 0; j < this.cols; j++) {
         const randomValue = Math.random();
         if (randomValue < 0.25) {
-          this.grid[i][j].plant = new Plant("Rose", "flower", 3, 2, "pink", this.grid[i][j]);
+          this.grid[i][j].plant = new Plant(
+            "Rose",
+            "flower",
+            3,
+            2,
+            "pink",
+            this.grid[i][j]
+          );
           this.grid[i][j].color = "pink";
         } else if (randomValue < 0.5) {
-          this.grid[i][j].plant = new Plant("Crabgrass", "weed", 1, 1, "green", this.grid[i][j],);
+          this.grid[i][j].plant = new Plant(
+            "Crabgrass",
+            "weed",
+            1,
+            1,
+            "green",
+            this.grid[i][j]
+          );
           this.grid[i][j].color = "green";
         }
       }
@@ -185,16 +216,14 @@ class Game {
   }
 
   draw() {
-    const cellSize = gameWidth / this.cols;
-
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
-        const x = j * cellSize;
-        const y = i * cellSize;
+        const x = j * CELL_SIZE;
+        const y = i * CELL_SIZE;
         const cell = this.grid[i][j];
 
         ctx!.fillStyle = cell.color;
-        ctx!.fillRect(x, y, cellSize, cellSize);
+        ctx!.fillRect(x, y, CELL_SIZE, CELL_SIZE);
       }
     }
   }
@@ -254,6 +283,25 @@ class Game {
         }
       })
     );
+  }
+
+  updateCellInfo(row: number, col: number, cell: Cell) {
+    const cellElement = document.getElementById("cell");
+    if (cell.plant) {
+      cellElement!.textContent = `You are on cell [${row}, ${col}]. Plant Type: ${cell.plant?.name} Water Level: ${cell.plant?.waterLevel}. Growth Level: ${cell.plant?.growthLevel}`;
+    } else {
+      cellElement!.textContent = `You are on cell [${row}, ${col}], There is no Plant here`;
+    }
+  }
+
+  updatePlantInfo() {
+    let allPlants = "";
+    for (const plant of farmer.plants) {
+      allPlants += `${plant.name}, `;
+    }
+
+    const ownedSeedElement = document.getElementById("seed");
+    ownedSeedElement!.textContent = `Owned Seeds: ${allPlants}`;
   }
 
   //placing any update functions here
@@ -345,20 +393,26 @@ document.addEventListener("keydown", (event) => {
         row.forEach((cell) => {
           if (cell.plant) {
             cell.plant.checkGrowth();
-        }
-      }));
+          }
+        })
+      );
+      farmer.getCurrentCell();
       break;
     case "ArrowLeft":
-      farmer.x -= 10;
+      farmer.x -= CELL_SIZE;
+      farmer.getCurrentCell();
       break;
     case "ArrowRight":
-      farmer.x += 10;
+      farmer.x += CELL_SIZE;
+      farmer.getCurrentCell();
       break;
     case "ArrowUp":
-      farmer.y -= 10;
+      farmer.y -= CELL_SIZE;
+      farmer.getCurrentCell();
       break;
     case "ArrowDown":
-      farmer.y += 10;
+      farmer.y += CELL_SIZE;
+      farmer.getCurrentCell();
       break;
     case " ":
       const currentCell = farmer.getCurrentCell();
@@ -393,6 +447,7 @@ document.addEventListener("keydown", (event) => {
       } else {
         alert("No plants available!");
       }
+      game.updatePlantInfo();
       break;
   }
   drawGame();
@@ -400,7 +455,7 @@ document.addEventListener("keydown", (event) => {
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
 
-const game = new Game(7, 7);
+const game = new Game(ROWS, COLS);
 setInterval(() => {
   game.updateGame();
   drawGame();
