@@ -10,18 +10,20 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
 
-const playerSeeds: string[] = ["Sunflower", "Rose"];
-const plantsHarvested: Map<string,number> = new Map();
-playerSeeds.forEach(seed => {
-  plantsHarvested.set(seed, 0);
-});
-
 //Eventually this structure should be specified by a JSON object, map will work for now
 const plantManifest = {
   "Sunflower" : {name: "Sunflower", type: "flower", sunRequisite: 3, waterRequisite: 2, color: "yellow"},
   "Rose" : {name: "Rose", type: "flower", sunRequisite: 2, waterRequisite: 3, color: "pink"},
-  "Crabgrass" : {name: "Crabgrass", type: "weed", sunRequisite: 1, waterRequisite: 1, color: "green"}
+  "Daffodil": {name: "Daffodil", type: "flower", sunRequisite: 3, waterRequisite: 2, color: "#FFD700"}, // Gold
+  "Lily": {name: "Lily", type: "flower", sunRequisite: 2, waterRequisite: 3, color: "#FFFFFF"}, // White
+  "Marigold": {name: "Marigold", type: "flower", sunRequisite: 4, waterRequisite: 2, color: "#FFA500"}, // Orange
+  "Fuchsia": {name: "Fuchsia", type: "flower", sunRequisite: 3, waterRequisite: 3, color: "#FF00FF"}, // Fuchsia
 }
+
+const plantsHarvested: Map<string,number> = new Map();
+for (const plant in plantManifest){
+  plantsHarvested.set(plant, 0);
+};
 
 const GAME_SIZE = 7;
 const CELL_SIZE = gameWidth / GAME_SIZE;
@@ -287,7 +289,7 @@ class Game {
   updateUI() {
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
-    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${playerSeeds.join(" ")}`;
+    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${Object.keys(plantManifest).join(", ")}`;
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
@@ -393,7 +395,7 @@ function drawGame() {
 }
 
 function promptPlantSelection(): string {
-  const plantNames = playerSeeds.join(", ");
+  const plantNames = Object.keys(plantManifest).join(", ");
   const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
   return prompt(promptText) || ""; // Prompt the player for the plant name
 }
@@ -494,10 +496,6 @@ document.addEventListener("keydown", (event) => {
 //------------------------------------ Main ------------------------------------------------------------------------------------
 
 const game = new Game(GAME_SIZE);
-setInterval(() => {
-  game.updateGame();
-  drawGame();
-}, 10000);
 
 const farmer = new Character(
   gameWidth / 2,
