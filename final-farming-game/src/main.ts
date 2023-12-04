@@ -58,15 +58,17 @@ const plantManifest = [
 
 const MAX_PLANT_GROWTH = 15;
 
-const plantsHarvested: Map<string, number> = new Map<string, number>();
-for (const plantType of plantManifest) {
-  plantsHarvested.set(plantType.name, 0);
-}
+let plantsHarvested: number[]= plantManifest.map(()=>0); 
 
 const GAME_SIZE = 7;
 const CELL_SIZE = gameWidth / GAME_SIZE;
 
 //------------------------------------ Class def ------------------------------------------------------------------------------------
+interface Cell {
+  rowIndex: number;
+  colIndex: number;
+  plant: Plant | null;
+}
 
 class Character {
   constructor(
@@ -131,27 +133,22 @@ class Character {
   }
 }
 
-interface Cell {
-  rowIndex: number;
-  colIndex: number;
-  plant: Plant | null;
-}
-
 class Plant {
-  //plant's current level of resources
+  name: string;
+  plantType: string;
+
   sunLevel: number;
   waterLevel: number;
   growthLevel: number;
-  name: string;
-  cell: Cell | null; // can be null because it hasn't been planted yet
-  type: string; //flower or weed or other type
-  //for constructing a plant,
   sunRequisite: number;
   waterRequisite: number;
+
+  cell: Cell | null;
   color: string;
+
   constructor(
     name: string,
-    type: string,
+    plantType: string,
     sunRequisite: number,
     waterRequisite: number,
     color: string,
@@ -164,7 +161,7 @@ class Plant {
     this.name = name;
     this.sunRequisite = sunRequisite;
     this.waterRequisite = waterRequisite;
-    this.type = type;
+    this.plantType = plantType;
     this.color = color;
   }
 
@@ -174,11 +171,26 @@ class Plant {
       this.sunLevel >= this.sunRequisite &&
       this.waterLevel >= this.waterRequisite
     ) {
-      if (this.growthLevel < MAX_PLANT_GROWTH){
+      if (this.growthLevel < MAX_PLANT_GROWTH) {
         this.growthLevel += 1;
-        console.log(this.name, " in cell (", this.cell!.rowIndex, ",", this.cell!.colIndex, ") is growing! Growth level:", this.growthLevel);
-      }else{
-        console.log(this.name, "in cell: (", this.cell!.rowIndex, ",", this.cell!.colIndex, ") is ready for harvest!");
+        console.log(
+          this.name,
+          " in cell (",
+          this.cell!.rowIndex,
+          ",",
+          this.cell!.colIndex,
+          ") is growing! Growth level:",
+          this.growthLevel
+        );
+      } else {
+        console.log(
+          this.name,
+          "in cell: (",
+          this.cell!.rowIndex,
+          ",",
+          this.cell!.colIndex,
+          ") is ready for harvest!"
+        );
       }
     }
   }
@@ -213,7 +225,7 @@ class Game {
     for (let i = 0; i < this.size; i++) {
       for (let j = 0; j < this.size; j++) {
         const randomValue = Math.random();
-        if (randomValue < 0.10) {
+        if (randomValue < 0.1) {
           this.grid[i][j].plant = new Plant(
             "Crabgrass",
             "weed",
@@ -246,21 +258,24 @@ class Game {
     const min = 1;
     this.weatherCondition = Math.random() < 0.5 ? "sunny" : "rainy"; // 50% chance of sun
     this.weatherDegree = Math.floor(Math.random() * (max - min + 1)) + min;
-    console.log("New Day: Weather:", this.weatherCondition, " severity: ", this.weatherDegree);
+    console.log(
+      "New Day: Weather:",
+      this.weatherCondition,
+      " severity: ",
+      this.weatherDegree
+    );
   }
   //update the weather condition, player seeds and current Cell text on screen
   updateUI() {
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
-    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${plantManifest.map(plantType => plantType.name).join(", ")}`;
+    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${plantManifest
+      .map((plantType) => plantType.name)
+      .join(", ")}`;
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
-    harvestedPlants!.innerHTML = `<strong>Harvested Plants:</strong> ${Array.from(
-      plantsHarvested.entries()
-    )
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(" ")}`;
+    harvestedPlants!.innerHTML = `<strong>Harvested Plants:</strong> ${Array.from(plantManifest.map((plantType, index)=> [plantType.name, plantsHarvested[index]].join(": "))).join(", ")}`;
 
     //Weather UI
     const weatherElement = document.getElementById("weather");
@@ -308,6 +323,12 @@ class Game {
     }
   }
 
+  applyGameState(state: GameState){
+    game.grid = state.grid;
+    plantsHarvested = state.harvestedPlants;
+    this.updateUI();
+  }
+
   //placing any update functions here
   updateGame() {
     this.updateWeather();
@@ -326,11 +347,22 @@ function drawGame() {
 }
 
 function promptPlantSelection(): string {
-  const plantNames = plantManifest.map(plantType => plantType.name).join(", ");
+  const plantNames = plantManifest
+    .map((plantType) => plantType.name)
+    .join(", ");
   const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
 
+//returns index representation of plant based on position on plantManifest
+function getPlantIndex(plantName: string): number{
+  plantManifest.find((plantType, index)=> {
+    if (plantType.name.toLowerCase() === plantName.toLowerCase()){
+      return index;
+    }
+  });
+  return -1;
+}
 function reapPlant(currentCell: Cell) {
   const confirmReap = window.confirm(
     `Do you want to reap the ${
@@ -343,49 +375,59 @@ function reapPlant(currentCell: Cell) {
   );
 
   if (confirmReap) {
-    if (currentCell.plant!.type != "weed"){ // do not add weeds to inventory
+    if (currentCell.plant!.plantType != "weed") {
+      // do not add weeds to inventory
       farmer.plants.push(currentCell.plant!);
       const reapedPlant = currentCell.plant!.name;
-      if (currentCell.plant!.growthLevel >= MAX_PLANT_GROWTH){ // player only collects plant if it was ready for harvest
-        plantsHarvested.set(reapedPlant, plantsHarvested.get(reapedPlant)! + 1);
-        console.log("HARVEST:   ", plantsHarvested.get(reapedPlant));
+      if (currentCell.plant!.growthLevel >= MAX_PLANT_GROWTH) {
+        // player only collects plant if it was ready for harvest
+        const plantIndex = getPlantIndex(reapedPlant);
+        plantsHarvested[plantIndex] += 1;
+        console.log("HARVEST:   ", plantsHarvested[plantIndex]);
       }
     }
 
-    console.log(`You reaped the ${currentCell.plant!.name} plant! in  cell (${currentCell.rowIndex},${currentCell.colIndex})`);
+    console.log(
+      `You reaped the ${currentCell.plant!.name} plant! in  cell (${
+        currentCell.rowIndex
+      },${currentCell.colIndex})`
+    );
     currentCell.plant = null; // Remove plant from cell
 
     game.updateUI();
   }
 }
+
 // interacts with cell
-function interact(cell: Cell){
-      if (cell.plant != null) {
-        // if there is a plant here, reap it (Weeds and Flowers)
-        reapPlant(cell);
-        // farmer.plants.push(cell!.plant);
-        // cell!.plant = null; //remove plant fom cell
-        // cell!.color = "saddlebrown";
-      } else if (cell.plant == null) {
-        const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
-        const selectedPlantType = plantManifest.find(plantType => plantType.name.toLowerCase() == plantName.toLowerCase());
-        if (selectedPlantType) {
-          cell.plant = new Plant(
-            selectedPlantType.name,
-            selectedPlantType.type,
-            selectedPlantType.sunRequisite,
-            selectedPlantType.waterRequisite,
-            selectedPlantType.color,
-            cell
-          );
-          // Scenario Check (Remove in future)
-          updateScenario(selectedPlantType.name);
-        } else {
-          console.log("Invalid plant selection.");
-        }
-      } else {
-        alert("No plants available!");
-      }
+function interact(cell: Cell) {
+  if (cell.plant != null) {
+    // if there is a plant here, reap it (Weeds and Flowers)
+    reapPlant(cell);
+    // farmer.plants.push(cell!.plant);
+    // cell!.plant = null; //remove plant fom cell
+    // cell!.color = "saddlebrown";
+  } else if (cell.plant == null) {
+    const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
+    const selectedPlantType = plantManifest.find(
+      (plantType) => plantType.name.toLowerCase() == plantName.toLowerCase()
+    );
+    if (selectedPlantType) {
+      cell.plant = new Plant(
+        selectedPlantType.name,
+        selectedPlantType.type,
+        selectedPlantType.sunRequisite,
+        selectedPlantType.waterRequisite,
+        selectedPlantType.color,
+        cell
+      );
+      // Scenario Check (Remove in future)
+      updateScenario(selectedPlantType.name);
+    } else {
+      console.log("Invalid plant selection.");
+    }
+  } else {
+    alert("No plants available!");
+  }
 }
 
 function updateScenario(action: string) {
@@ -398,37 +440,91 @@ function updateScenario(action: string) {
   }
 }
 
+function getCurrentGameState(game: Game): GameState{
+  return {grid: game.grid, currentWeather: [(game.weatherCondition == "sunny")? 0: 1, game.weatherDegree], harvestedPlants: Array.from(plantsHarvested.values())};
+}
+
+
+
+function undo(){
+  if (states.length > 0){
+    const prevState = states.pop();
+    redoStack.push(prevState!);
+    game.applyGameState(prevState!);
+    console.log("game state: ", prevState);
+  }else{
+    console.log("Undo not available.");
+  }
+}
+
+function redo(){
+  if (redoStack.length > 0){
+    const popped = redoStack.pop();
+    states.push(popped!);
+    game.applyGameState(popped!);
+    console.log("game state: ", popped);
+  }else{
+    console.log("Redo not available.");
+  }
+}
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
+
+interface GameState {
+  grid: Cell[][];
+  currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
+  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
+}
+const states: GameState[] = [];
+const redoStack: GameState[] = [];
 
 //character movement and controls
 document.addEventListener("keydown", (event) => {
   switch (event.key) {
-    case "t":
+    case "t": {
       game.updateGame();
-      game.grid.forEach((row) =>
+      game.grid.forEach((row) =>{
         row.forEach((cell) => {
           if (cell.plant) {
             cell.plant.simulateGrowth();
           }
-        })
-      );
+        });
+      });
+      
+      //add current game state
+      states.push(getCurrentGameState(game));
+
+      console.log("commands: ", states);
       break;
+    }
+
     case "ArrowLeft":
       farmer.dragPos("W", CELL_SIZE);
       break;
+
     case "ArrowRight":
       farmer.dragPos("E", CELL_SIZE);
       break;
+
     case "ArrowUp":
       farmer.dragPos("N", CELL_SIZE);
       break;
+
     case "ArrowDown":
       farmer.dragPos("S", CELL_SIZE);
       break;
-    case " ":{
+
+    case " ": {
       interact(farmer.getCurrentCell()!);
       break;
     }
+    //undo
+    case "u":
+      undo();
+      break;
+    //redo
+    case "r":
+      redo();
+      break;
   }
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
   drawGame();
