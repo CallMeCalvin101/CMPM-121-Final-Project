@@ -11,56 +11,56 @@ const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
 
 //Eventually this structure should be specified by a JSON object, map will work for now
-const plantManifest = {
-  sunflower: {
+const plantManifest = [
+  {
     name: "Sunflower",
     type: "flower",
     sunRequisite: 3,
     waterRequisite: 2,
     color: "yellow",
   },
-  rose: {
+  {
     name: "Rose",
     type: "flower",
     sunRequisite: 2,
     waterRequisite: 3,
     color: "pink",
   },
-  daffodil: {
+  {
     name: "Daffodil",
     type: "flower",
     sunRequisite: 3,
     waterRequisite: 2,
     color: "#FFD700",
   }, // Gold
-  lily: {
+  {
     name: "Lily",
     type: "flower",
     sunRequisite: 2,
     waterRequisite: 3,
     color: "#FFFFFF",
   }, // White
-  marigold: {
+  {
     name: "Marigold",
     type: "flower",
     sunRequisite: 4,
     waterRequisite: 2,
     color: "#FFA500",
   }, // Orange
-  fuchsia: {
+  {
     name: "Fuchsia",
     type: "flower",
     sunRequisite: 3,
     waterRequisite: 3,
     color: "#FF00FF",
   }, // Fuchsia
-};
+];
 
 const MAX_PLANT_GROWTH = 15;
 
 const plantsHarvested: Map<string, number> = new Map<string, number>();
-for (const plant in plantManifest) {
-  plantsHarvested.set(plant, 0);
+for (const plantType of plantManifest) {
+  plantsHarvested.set(plantType.name, 0);
 }
 
 const GAME_SIZE = 7;
@@ -252,9 +252,7 @@ class Game {
   updateUI() {
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
-    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${Object.keys(
-      plantManifest
-    ).join(", ")}`;
+    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${plantManifest.map(plantType => plantType.name).join(", ")}`;
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
@@ -328,7 +326,7 @@ function drawGame() {
 }
 
 function promptPlantSelection(): string {
-  const plantNames = Object.keys(plantManifest).join(", ");
+  const plantNames = plantManifest.map(plantType => plantType.name).join(", ");
   const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
@@ -350,6 +348,7 @@ function reapPlant(currentCell: Cell) {
       const reapedPlant = currentCell.plant!.name;
       if (currentCell.plant!.growthLevel >= MAX_PLANT_GROWTH){ // player only collects plant if it was ready for harvest
         plantsHarvested.set(reapedPlant, plantsHarvested.get(reapedPlant)! + 1);
+        console.log("HARVEST:   ", plantsHarvested.get(reapedPlant));
       }
     }
 
@@ -358,6 +357,35 @@ function reapPlant(currentCell: Cell) {
 
     game.updateUI();
   }
+}
+// interacts with cell
+function interact(cell: Cell){
+      if (cell.plant != null) {
+        // if there is a plant here, reap it (Weeds and Flowers)
+        reapPlant(cell);
+        // farmer.plants.push(cell!.plant);
+        // cell!.plant = null; //remove plant fom cell
+        // cell!.color = "saddlebrown";
+      } else if (cell.plant == null) {
+        const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
+        const selectedPlantType = plantManifest.find(plantType => plantType.name.toLowerCase() == plantName.toLowerCase());
+        if (selectedPlantType) {
+          cell.plant = new Plant(
+            selectedPlantType.name,
+            selectedPlantType.type,
+            selectedPlantType.sunRequisite,
+            selectedPlantType.waterRequisite,
+            selectedPlantType.color,
+            cell
+          );
+          // Scenario Check (Remove in future)
+          updateScenario(selectedPlantType.name);
+        } else {
+          console.log("Invalid plant selection.");
+        }
+      } else {
+        alert("No plants available!");
+      }
 }
 
 function updateScenario(action: string) {
@@ -398,35 +426,7 @@ document.addEventListener("keydown", (event) => {
       farmer.dragPos("S", CELL_SIZE);
       break;
     case " ":{
-      const currentCell = farmer.getCurrentCell();
-      if (currentCell!.plant != null && currentCell) {
-        // if there is a plant here, reap it (Weeds and Flowers)
-        reapPlant(currentCell);
-        // farmer.plants.push(currentCell!.plant);
-        // currentCell!.plant = null; //remove plant fom cell
-        // currentCell!.color = "saddlebrown";
-      } else if (currentCell!.plant == null) {
-        const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
-        const selectedPlantName = (Object.keys(plantManifest).find(plant => plant.toLowerCase() == plantName.toLowerCase())) as "rose";
-        const selectedPlant: Plant = plantManifest[selectedPlantName] as Plant;
-        if (selectedPlantName) { // checks if plant is equal to 
-          currentCell!.plant = new Plant(
-            selectedPlant.name,
-            selectedPlant.type,
-            selectedPlant.sunRequisite,
-            selectedPlant.waterRequisite,
-            selectedPlant.color,
-            currentCell!
-          );
-          farmer.getCurrentCell();
-          // Scenario Check (Remove in future)
-          updateScenario(selectedPlant.name);
-        } else {
-          console.log("Invalid plant selection.");
-        }
-      } else {
-        alert("No plants available!");
-      }
+      interact(farmer.getCurrentCell()!);
       break;
     }
   }
@@ -437,10 +437,7 @@ document.addEventListener("keydown", (event) => {
 //------------------------------------ Main ------------------------------------------------------------------------------------
 
 const game = new Game(GAME_SIZE);
-
 const farmer = new Character(gameWidth / 2, gameHeight / 2, []);
-
-//hopefully this works as a plant holder
 
 drawGame();
 game.updateGame();
