@@ -12,42 +12,42 @@ const testScenario = new Scenario("Sunflower", 3);
 
 //Eventually this structure should be specified by a JSON object, map will work for now
 const plantManifest = {
-  Sunflower: {
+  sunflower: {
     name: "Sunflower",
     type: "flower",
     sunRequisite: 3,
     waterRequisite: 2,
     color: "yellow",
   },
-  Rose: {
+  rose: {
     name: "Rose",
     type: "flower",
     sunRequisite: 2,
     waterRequisite: 3,
     color: "pink",
   },
-  Daffodil: {
+  daffodil: {
     name: "Daffodil",
     type: "flower",
     sunRequisite: 3,
     waterRequisite: 2,
     color: "#FFD700",
   }, // Gold
-  Lily: {
+  lily: {
     name: "Lily",
     type: "flower",
     sunRequisite: 2,
     waterRequisite: 3,
     color: "#FFFFFF",
   }, // White
-  Marigold: {
+  marigold: {
     name: "Marigold",
     type: "flower",
     sunRequisite: 4,
     waterRequisite: 2,
     color: "#FFA500",
   }, // Orange
-  Fuchsia: {
+  fuchsia: {
     name: "Fuchsia",
     type: "flower",
     sunRequisite: 3,
@@ -58,7 +58,7 @@ const plantManifest = {
 
 const MAX_PLANT_GROWTH = 15;
 
-const plantsHarvested: Map<string, number> = new Map();
+const plantsHarvested: Map<string, number> = new Map<string, number>();
 for (const plant in plantManifest) {
   plantsHarvested.set(plant, 0);
 }
@@ -127,11 +127,7 @@ class Character {
     const gridX = Math.floor(farmer.posX / CELL_SIZE);
     const gridY = Math.floor(farmer.posY / CELL_SIZE);
 
-    if (game.grid[gridY] && game.grid[gridY][gridX]) {
-      return game.grid[gridY][gridX];
-    } else {
-      return null;
-    }
+    return game.grid[gridY][gridX];
   }
 }
 
@@ -180,9 +176,9 @@ class Plant {
     ) {
       if (this.growthLevel < MAX_PLANT_GROWTH){
         this.growthLevel += 1;
-        console.log(this.name, " is growing! Growth level:", this.growthLevel);
+        console.log(this.name, " in cell (", this.cell!.rowIndex, ",", this.cell!.colIndex, ") is growing! Growth level:", this.growthLevel);
       }else{
-        console.log(this.name, "in cell: ", this.cell!.rowIndex, ", ", this.cell!.colIndex, " is ready for harvest!");
+        console.log(this.name, "in cell: (", this.cell!.rowIndex, ",", this.cell!.colIndex, ") is ready for harvest!");
       }
     }
   }
@@ -308,9 +304,9 @@ class Game {
   updateCurrentCellUI(cell: Cell) {
     const cellElement = document.getElementById("cell");
     if (cell.plant) {
-      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex}, ${cell.colIndex}]. <strong>Plant Type:</strong> ${cell.plant?.name} <strong>Water Level:</strong> ${cell.plant?.waterLevel}. <strong>Growth Level:<strong> ${cell.plant?.growthLevel}`;
+      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}]. <strong>Plant Type:</strong> ${cell.plant?.name} <strong>Water Level:</strong> ${cell.plant?.waterLevel}. <strong>Growth Level:<strong> ${cell.plant?.growthLevel}`;
     } else {
-      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex}, ${cell.colIndex}], There is no Plant here`;
+      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}], There is no Plant here`;
     }
   }
 
@@ -334,7 +330,7 @@ function drawGame() {
 function promptPlantSelection(): string {
   const plantNames = Object.keys(plantManifest).join(", ");
   const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
-  return prompt(promptText) || ""; // Prompt the player for the plant name
+  return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
 
 function reapPlant(currentCell: Cell) {
@@ -357,7 +353,7 @@ function reapPlant(currentCell: Cell) {
       }
     }
 
-    console.log(`You reaped the ${currentCell.plant!.name} plant!`);
+    console.log(`You reaped the ${currentCell.plant!.name} plant! in  cell (${currentCell.rowIndex},${currentCell.colIndex})`);
     currentCell.plant = null; // Remove plant from cell
 
     game.updateUI();
@@ -401,7 +397,7 @@ document.addEventListener("keydown", (event) => {
     case "ArrowDown":
       farmer.dragPos("S", CELL_SIZE);
       break;
-    case " ":
+    case " ":{
       const currentCell = farmer.getCurrentCell();
       if (currentCell!.plant != null && currentCell) {
         // if there is a plant here, reap it (Weeds and Flowers)
@@ -411,19 +407,20 @@ document.addEventListener("keydown", (event) => {
         // currentCell!.color = "saddlebrown";
       } else if (currentCell!.plant == null) {
         const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
-        const selectedPlant = (Object.keys(plantManifest).find(plant => plant.toLowerCase() == plantName.toLowerCase())) as "Rose";
-        if (selectedPlant) { // checks if plant is equal to 
+        const selectedPlantName = (Object.keys(plantManifest).find(plant => plant.toLowerCase() == plantName.toLowerCase())) as "rose";
+        const selectedPlant: Plant = plantManifest[selectedPlantName] as Plant;
+        if (selectedPlantName) { // checks if plant is equal to 
           currentCell!.plant = new Plant(
-            plantManifest[selectedPlant].name,
-            plantManifest[selectedPlant].type,
-            plantManifest[selectedPlant].sunRequisite,
-            plantManifest[selectedPlant].waterRequisite,
-            plantManifest[selectedPlant].color,
+            selectedPlant.name,
+            selectedPlant.type,
+            selectedPlant.sunRequisite,
+            selectedPlant.waterRequisite,
+            selectedPlant.color,
             currentCell!
           );
           farmer.getCurrentCell();
           // Scenario Check (Remove in future)
-          updateScenario(plantManifest[selectedPlant].name);
+          updateScenario(selectedPlant.name);
         } else {
           console.log("Invalid plant selection.");
         }
@@ -431,6 +428,7 @@ document.addEventListener("keydown", (event) => {
         alert("No plants available!");
       }
       break;
+    }
   }
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
   drawGame();
