@@ -215,7 +215,6 @@ class Game {
     this.weatherCondition = "sunny";
     this.weatherDegree = 3;
     this.generateRandomGrid();
-    this.updateUI();
 
     const midIndex = Math.floor(this.size / 2);
     this.updateCurrentCellUI(this.grid[midIndex][midIndex]);
@@ -225,7 +224,7 @@ class Game {
     for (let i = 0; i < this.size; i++) {
       for (let j = 0; j < this.size; j++) {
         const randomValue = Math.random();
-        if (randomValue < 0.1) {
+        if (randomValue < 0.07) {
           this.grid[i][j].plant = new Plant(
             "Crabgrass",
             "weed",
@@ -237,7 +236,9 @@ class Game {
         }
       }
     }
+    states.push(getCurrentGameState(this));
   }
+
 
   draw() {
     for (let i = 0; i < this.size; i++) {
@@ -324,9 +325,19 @@ class Game {
   }
 
   applyGameState(state: GameState){
-    game.grid = state.grid;
-    plantsHarvested = state.harvestedPlants;
-    this.updateUI();
+    for (let row = 0 ; row < state.grid.length; row++){
+      for (let col= 0; col < state.grid[row].length; col++){
+        game.grid[row][col] = {...state.grid[row][col]};
+      }
+    }
+    plantsHarvested = Array.from(state.harvestedPlants);
+
+    console.log("applied: ", state);
+    notifyChange("stateChanged");
+  }
+
+  cloneGrid(): Cell[][] {
+    return this.grid.map(row => row.map(cell => ({ ...cell })));
   }
 
   //placing any update functions here
@@ -338,6 +349,11 @@ class Game {
 }
 
 //------------------------------------ Helper Funcs ------------------------------------------------------------------------------------
+
+// notify observer of change by dispatching a new event
+function notifyChange(name: string) {
+  document.dispatchEvent(new Event(name));
+}
 
 // Draw game
 function drawGame() {
@@ -394,19 +410,19 @@ function reapPlant(currentCell: Cell) {
     );
     currentCell.plant = null; // Remove plant from cell
 
-    game.updateUI();
+    notifyChange("stateChanged");
   }
 }
 
 // interacts with cell
 function interact(cell: Cell) {
-  if (cell.plant != null) {
-    // if there is a plant here, reap it (Weeds and Flowers)
+  if (cell.plant != null) { // if there is a plant here, reap it (Weeds and Flowers)
     reapPlant(cell);
-    // farmer.plants.push(cell!.plant);
-    // cell!.plant = null; //remove plant fom cell
-    // cell!.color = "saddlebrown";
-  } else if (cell.plant == null) {
+    redoStack = []; //clear redo since action was performed
+    states.push(getCurrentGameState(game));
+    notifyChange("stateChanged");
+
+  } else if (cell.plant == null) { //otherwise prompt player for action
     const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
     const selectedPlantType = plantManifest.find(
       (plantType) => plantType.name.toLowerCase() == plantName.toLowerCase()
@@ -422,6 +438,10 @@ function interact(cell: Cell) {
       );
       // Scenario Check (Remove in future)
       updateScenario(selectedPlantType.name);
+      
+      redoStack = [];
+      states.push(getCurrentGameState(game));
+      notifyChange("stateChanged");
     } else {
       console.log("Invalid plant selection.");
     }
@@ -441,17 +461,17 @@ function updateScenario(action: string) {
 }
 
 function getCurrentGameState(game: Game): GameState{
-  return {grid: game.grid, currentWeather: [(game.weatherCondition == "sunny")? 0: 1, game.weatherDegree], harvestedPlants: Array.from(plantsHarvested.values())};
+  return {grid: game.cloneGrid(), currentWeather: Array.from([(game.weatherCondition == "sunny")? 0: 1, game.weatherDegree]), harvestedPlants: Array.from(plantsHarvested.values())};
 }
 
 
 
 function undo(){
-  if (states.length > 0){
-    const prevState = states.pop();
-    redoStack.push(prevState!);
-    game.applyGameState(prevState!);
-    console.log("game state: ", prevState);
+  if (states.length > 1){
+    const currentState = states.pop();
+    redoStack.push(currentState!);
+    game.applyGameState(states[states.length-1]);
+    console.log("game state after undo: ", getCurrentGameState(game));
   }else{
     console.log("Undo not available.");
   }
@@ -462,7 +482,7 @@ function redo(){
     const popped = redoStack.pop();
     states.push(popped!);
     game.applyGameState(popped!);
-    console.log("game state: ", popped);
+    console.log("game state after redo: ", getCurrentGameState(game));
   }else{
     console.log("Redo not available.");
   }
@@ -475,12 +495,13 @@ interface GameState {
   harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
 }
 const states: GameState[] = [];
-const redoStack: GameState[] = [];
+let redoStack: GameState[] = [];
 
 //character movement and controls
 document.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "t": {
+      redoStack = [];
       game.updateGame();
       game.grid.forEach((row) =>{
         row.forEach((cell) => {
@@ -492,8 +513,9 @@ document.addEventListener("keydown", (event) => {
       
       //add current game state
       states.push(getCurrentGameState(game));
+      notifyChange("stateChanged");
 
-      console.log("commands: ", states);
+      console.log("saved states: ", states);
       break;
     }
 
@@ -528,6 +550,11 @@ document.addEventListener("keydown", (event) => {
   }
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
   drawGame();
+});
+
+document.addEventListener("stateChanged", ()=> {
+  game.updateUI();
+  game.draw();
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
