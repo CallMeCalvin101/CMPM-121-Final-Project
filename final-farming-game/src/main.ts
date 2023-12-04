@@ -581,6 +581,7 @@ document.addEventListener("keydown", (event) => {
     
     case "d":
       deleteLocalStorage();
+      break;
   }
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
   drawGame();
