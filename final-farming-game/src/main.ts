@@ -142,8 +142,8 @@ class Plant {
   growthLevel: number;
   sunRequisite: number;
   waterRequisite: number;
-
-  cell: Cell | null;
+  rowIndex: number;
+  colIndex: number;
   color: string;
 
   constructor(
@@ -152,17 +152,19 @@ class Plant {
     sunRequisite: number,
     waterRequisite: number,
     color: string,
-    cell: Cell
+    rowIndex: number,
+    colIndex: number
   ) {
     this.sunLevel = 0;
     this.waterLevel = 0;
     this.growthLevel = 0;
-    this.cell = cell;
     this.name = name;
     this.sunRequisite = sunRequisite;
     this.waterRequisite = waterRequisite;
     this.plantType = plantType;
     this.color = color;
+    this.rowIndex = rowIndex;
+    this.colIndex = colIndex;
   }
 
   simulateGrowth() {
@@ -176,9 +178,9 @@ class Plant {
         console.log(
           this.name,
           " in cell (",
-          this.cell!.rowIndex,
+          this.rowIndex,
           ",",
-          this.cell!.colIndex,
+          this.colIndex,
           ") is growing! Growth level:",
           this.growthLevel
         );
@@ -186,9 +188,9 @@ class Plant {
         console.log(
           this.name,
           "in cell: (",
-          this.cell!.rowIndex,
+          this.rowIndex,
           ",",
-          this.cell!.colIndex,
+          this.colIndex,
           ") is ready for harvest!"
         );
       }
@@ -202,22 +204,33 @@ class Game {
   weatherCondition: string; // 'sunny' or 'rainy'
   weatherDegree: number; //magnitude of sun or rain
 
+  //initializes game from localstorage is available, otherwise initializes new game
   constructor(gridSize: number) {
     this.size = gridSize;
-    this.grid = Array.from({ length: this.size }, (_, i) =>
-      Array.from({ length: this.size }, (_, j) => ({
-        rowIndex: i,
-        colIndex: j,
-        plant: null,
-      }))
-    );
 
-    this.weatherCondition = "sunny";
-    this.weatherDegree = 3;
-    this.generateRandomGrid();
+    const localStore = localStorage.getItem("states");
+    if (localStore){
+      states = JSON.parse(localStore) as GameState[];
+      this.grid = states[states.length-1].grid;
+      this.weatherCondition = states[states.length-1].currentWeather[0] == 0 ? "sunny": "rainy";
+      this.weatherDegree = states[states.length-1].currentWeather[1];
+      console.log(states);
+    }else{
+      this.grid = Array.from({ length: this.size }, (_, i) =>
+        Array.from({ length: this.size }, (_, j) => ({
+          rowIndex: i,
+          colIndex: j,
+          plant: null,
+        }))
+      );
 
-    const midIndex = Math.floor(this.size / 2);
-    this.updateCurrentCellUI(this.grid[midIndex][midIndex]);
+      this.weatherCondition = "sunny";
+      this.weatherDegree = 3;
+      this.generateRandomGrid();
+
+      const midIndex = Math.floor(this.size / 2);
+      this.updateCurrentCellUI(this.grid[midIndex][midIndex]);
+    }
   }
 
   generateRandomGrid() {
@@ -231,7 +244,8 @@ class Game {
             1,
             1,
             "green",
-            this.grid[i][j]
+            this.grid[i][j].rowIndex,
+            this.grid[i][j].colIndex
           );
         }
       }
@@ -434,11 +448,12 @@ function interact(cell: Cell) {
         selectedPlantType.sunRequisite,
         selectedPlantType.waterRequisite,
         selectedPlantType.color,
-        cell
+        cell.rowIndex,
+        cell.rowIndex
       );
       // Scenario Check (Remove in future)
       updateScenario(selectedPlantType.name);
-      
+
       redoStack = [];
       states.push(getCurrentGameState(game));
       notifyChange("stateChanged");
@@ -487,6 +502,22 @@ function redo(){
     console.log("Redo not available.");
   }
 }
+
+// delete local storage game data and start game over
+function deleteLocalStorage(){
+  if (confirm("Are you sure you want to delete all game data and start over?")){
+    localStorage.removeItem("states");
+    states = [];
+    redoStack = [];
+    game = new Game(GAME_SIZE);
+    farmer = new Character(gameWidth / 2, gameHeight / 2, []);
+
+
+    drawGame();
+    game.updateGame();
+  }
+
+}
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 interface GameState {
@@ -494,7 +525,7 @@ interface GameState {
   currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
   harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
 }
-const states: GameState[] = [];
+let states: GameState[] = [];
 let redoStack: GameState[] = [];
 
 //character movement and controls
@@ -547,6 +578,9 @@ document.addEventListener("keydown", (event) => {
     case "r":
       redo();
       break;
+    
+    case "d":
+      deleteLocalStorage();
   }
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
   drawGame();
@@ -555,12 +589,14 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("stateChanged", ()=> {
   game.updateUI();
   game.draw();
+
+  localStorage.setItem("states", JSON.stringify(states));
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
 
-const game = new Game(GAME_SIZE);
-const farmer = new Character(gameWidth / 2, gameHeight / 2, []);
+let game = new Game(GAME_SIZE);
+let farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 
 drawGame();
 game.updateGame();
