@@ -61,6 +61,9 @@ const MAX_PLANT_GROWTH = 15;
 
 let plantsHarvested: number[] = plantManifest.map(() => 0);
 
+let states: GameState[] = []; //history of game states
+let redoStack: GameState[] = [];
+
 const GAME_SIZE = 7;
 const CELL_SIZE = gameWidth / GAME_SIZE;
 
@@ -69,6 +72,12 @@ interface Cell {
   rowIndex: number;
   colIndex: number;
   plant: Plant | null;
+}
+
+interface GameState {
+  grid: Cell[][];
+  currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
+  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
 }
 
 class Character {
@@ -127,8 +136,8 @@ class Character {
 
   //return the cell and its properties
   getCurrentCell(): Cell | null {
-    const gridX = Math.floor(farmer.posX / CELL_SIZE);
-    const gridY = Math.floor(farmer.posY / CELL_SIZE);
+    const gridX = Math.floor(this.posX / CELL_SIZE);
+    const gridY = Math.floor(this.posY / CELL_SIZE);
 
     return game.grid[gridY][gridX];
   }
@@ -217,6 +226,8 @@ class Game {
         states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
       this.weatherDegree = states[states.length - 1].currentWeather[1];
       console.log("states: ", states);
+      this.updateCurrentCellUI(this.grid[Math.floor(this.size/2)][Math.floor(this.size/2)]);
+      this.updateUI();
     } else {
       this.grid = Array.from({ length: this.size }, (_, i) =>
         Array.from({ length: this.size }, (_, j) => ({
@@ -232,6 +243,7 @@ class Game {
 
       const midIndex = Math.floor(this.size / 2);
       this.updateCurrentCellUI(this.grid[midIndex][midIndex]);
+      this.updateGame();
     }
 
     //add saved games states if available
@@ -433,6 +445,8 @@ function getPlantIndex(plantName: string): number {
   });
   return -1;
 }
+
+//removes a plant from current cell
 function reapPlant(currentCell: Cell) {
   const confirmReap = window.confirm(
     `Do you want to reap the ${
@@ -456,7 +470,6 @@ function reapPlant(currentCell: Cell) {
         console.log("HARVEST:   ", plantsHarvested[plantIndex]);
       }
     }
-
     console.log(
       `You reaped the ${currentCell.plant!.name} plant! in  cell (${
         currentCell.rowIndex
@@ -644,7 +657,7 @@ function loadSavedGame() {
       selectedInteger <= stateArray.length
     ) {
       const selectedName = stateArray[selectedInteger-1][0];
-      
+
       if (savedGameStates.has(selectedName)) {
         console.log("selected: ", selectedName);
         const states = savedGameStates
@@ -660,15 +673,6 @@ function loadSavedGame() {
 }
 
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
-
-interface GameState {
-  grid: Cell[][];
-  currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
-  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
-}
-
-let states: GameState[] = []; //history of game states
-let redoStack: GameState[] = [];
 
 //character movement and controls
 document.addEventListener("keydown", (event) => {
@@ -691,7 +695,6 @@ document.addEventListener("keydown", (event) => {
       console.log("saved states: ", states);
       break;
     }
-
     case "ArrowLeft":
       farmer.dragPos("W", CELL_SIZE);
       break;
@@ -707,7 +710,7 @@ document.addEventListener("keydown", (event) => {
     case "ArrowDown":
       farmer.dragPos("S", CELL_SIZE);
       break;
-
+    //interact with current cell
     case " ": {
       interact(farmer.getCurrentCell()!);
       break;
@@ -737,10 +740,10 @@ document.addEventListener("keydown", (event) => {
   drawGame();
 });
 
+//observer for state changed event will update UI elements and redraw game
 document.addEventListener("stateChanged", () => {
   game.updateUI();
   game.draw();
-
   localStorage.setItem("states", JSON.stringify(states));
 });
 
@@ -748,9 +751,8 @@ document.addEventListener("stateChanged", () => {
 
 let game = new Game(GAME_SIZE);
 let farmer = new Character(gameWidth / 2, gameHeight / 2, []);
-
 drawGame();
-game.updateGame();
+
 
 /*
 function runScenarioTest() {
