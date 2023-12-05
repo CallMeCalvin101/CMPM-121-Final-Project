@@ -9,6 +9,7 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
+const savedGameStates = new Map<string, GameState[]>();
 
 //Eventually this structure should be specified by a JSON object, map will work for now
 const plantManifest = [
@@ -58,7 +59,7 @@ const plantManifest = [
 
 const MAX_PLANT_GROWTH = 15;
 
-let plantsHarvested: number[]= plantManifest.map(()=>0); 
+let plantsHarvested: number[] = plantManifest.map(() => 0);
 
 const GAME_SIZE = 7;
 const CELL_SIZE = gameWidth / GAME_SIZE;
@@ -207,15 +208,16 @@ class Game {
   //initializes game from localstorage is available, otherwise initializes new game
   constructor(gridSize: number) {
     this.size = gridSize;
-
+    // check to see if autosave state is available
     const localStore = localStorage.getItem("states");
-    if (localStore){
+    if (localStore) {
       states = JSON.parse(localStore) as GameState[];
-      this.grid = states[states.length-1].grid;
-      this.weatherCondition = states[states.length-1].currentWeather[0] == 0 ? "sunny": "rainy";
-      this.weatherDegree = states[states.length-1].currentWeather[1];
-      console.log(states);
-    }else{
+      this.grid = states[states.length - 1].grid;
+      this.weatherCondition =
+        states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
+      this.weatherDegree = states[states.length - 1].currentWeather[1];
+      console.log("states: ", states);
+    } else {
       this.grid = Array.from({ length: this.size }, (_, i) =>
         Array.from({ length: this.size }, (_, j) => ({
           rowIndex: i,
@@ -230,6 +232,16 @@ class Game {
 
       const midIndex = Math.floor(this.size / 2);
       this.updateCurrentCellUI(this.grid[midIndex][midIndex]);
+    }
+
+    //add saved games states if available
+    const storedData = localStorage.getItem("savedGames");
+    let restoredMap: Map<string, GameState[]>;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    if (storedData) {
+      const parsedData = JSON.parse(storedData) as [string, GameState[]][];
+      restoredMap = new Map<string, GameState[]>(parsedData);
+      console.log("cached saved games: ", restoredMap);
     }
   }
 
@@ -252,7 +264,6 @@ class Game {
     }
     states.push(getCurrentGameState(this));
   }
-
 
   draw() {
     for (let i = 0; i < this.size; i++) {
@@ -290,7 +301,11 @@ class Game {
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
-    harvestedPlants!.innerHTML = `<strong>Harvested Plants:</strong> ${Array.from(plantManifest.map((plantType, index)=> [plantType.name, plantsHarvested[index]].join(": "))).join(", ")}`;
+    harvestedPlants!.innerHTML = `<strong>Harvested Plants:</strong> ${Array.from(
+      plantManifest.map((plantType, index) =>
+        [plantType.name, plantsHarvested[index]].join(": ")
+      )
+    ).join(", ")}`;
 
     //Weather UI
     const weatherElement = document.getElementById("weather");
@@ -298,6 +313,13 @@ class Game {
       this.weatherCondition.charAt(0).toUpperCase() +
       this.weatherCondition.slice(1)
     }, <strong>Severity:</strong> ${this.weatherDegree}`;
+
+    console.log(
+      "in UI - weather: ",
+      this.weatherCondition,
+      " ",
+      this.weatherDegree
+    );
   }
 
   //update water and sun levels for all plants on grid
@@ -338,20 +360,23 @@ class Game {
     }
   }
 
-  applyGameState(state: GameState){
-    for (let row = 0 ; row < state.grid.length; row++){
-      for (let col= 0; col < state.grid[row].length; col++){
-        game.grid[row][col] = {...state.grid[row][col]};
+  applyGameState(state: GameState) {
+    for (let row = 0; row < state.grid.length; row++) {
+      for (let col = 0; col < state.grid[row].length; col++) {
+        game.grid[row][col] = { ...state.grid[row][col] };
       }
     }
     plantsHarvested = Array.from(state.harvestedPlants);
 
-    console.log("applied: ", state);
+    game.weatherCondition = state.currentWeather[0] == 0 ? "sunny" : "rainy";
+    game.weatherDegree = state.currentWeather[1];
+
+    console.log("applied: ", cloneGameState(state));
     notifyChange("stateChanged");
   }
 
   cloneGrid(): Cell[][] {
-    return this.grid.map(row => row.map(cell => ({ ...cell })));
+    return this.grid.map((row) => row.map((cell) => ({ ...cell })));
   }
 
   //placing any update functions here
@@ -367,6 +392,21 @@ class Game {
 // notify observer of change by dispatching a new event
 function notifyChange(name: string) {
   document.dispatchEvent(new Event(name));
+}
+
+//returns string based on current date + time
+function getCurrentDateTime() {
+  const now = new Date();
+
+  // Get individual date and time components
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
 }
 
 // Draw game
@@ -385,9 +425,9 @@ function promptPlantSelection(): string {
 }
 
 //returns index representation of plant based on position on plantManifest
-function getPlantIndex(plantName: string): number{
-  plantManifest.find((plantType, index)=> {
-    if (plantType.name.toLowerCase() === plantName.toLowerCase()){
+function getPlantIndex(plantName: string): number {
+  plantManifest.find((plantType, index) => {
+    if (plantType.name.toLowerCase() === plantName.toLowerCase()) {
       return index;
     }
   });
@@ -430,13 +470,14 @@ function reapPlant(currentCell: Cell) {
 
 // interacts with cell
 function interact(cell: Cell) {
-  if (cell.plant != null) { // if there is a plant here, reap it (Weeds and Flowers)
+  if (cell.plant != null) {
+    // if there is a plant here, reap it (Weeds and Flowers)
     reapPlant(cell);
     redoStack = []; //clear redo since action was performed
     states.push(getCurrentGameState(game));
     notifyChange("stateChanged");
-
-  } else if (cell.plant == null) { //otherwise prompt player for action
+  } else if (cell.plant == null) {
+    //otherwise prompt player for action
     const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
     const selectedPlantType = plantManifest.find(
       (plantType) => plantType.name.toLowerCase() == plantName.toLowerCase()
@@ -475,49 +516,149 @@ function updateScenario(action: string) {
   }
 }
 
-function getCurrentGameState(game: Game): GameState{
-  return {grid: game.cloneGrid(), currentWeather: Array.from([(game.weatherCondition == "sunny")? 0: 1, game.weatherDegree]), harvestedPlants: Array.from(plantsHarvested.values())};
+//returns a deep copy of a game state object representing the current game state
+function getCurrentGameState(game: Game): GameState {
+  const currentState: GameState = {
+    grid: game.cloneGrid(),
+    currentWeather: Array.from([
+      game.weatherCondition == "sunny" ? 0 : 1,
+      game.weatherDegree,
+    ]),
+    harvestedPlants: Array.from(plantsHarvested.values()),
+  };
+
+  return cloneGameState(currentState);
 }
 
+//returns a deep copy of a GameState
+function cloneGameState(state: GameState): GameState {
+  // helper function to clone a Plant
+  function clonePlant(plant: Plant | null): Plant | null {
+    return plant
+      ? new Plant(
+          plant.name,
+          plant.plantType,
+          plant.sunRequisite,
+          plant.waterRequisite,
+          plant.color,
+          plant.rowIndex,
+          plant.colIndex
+        )
+      : null;
+  }
 
+  // Clone grid of cells, including the Plant objects
+  const clonedGrid: Cell[][] = state.grid.map((row) =>
+    row.map((cell) => ({
+      ...cell,
+      plant: clonePlant(cell.plant),
+    }))
+  );
 
-function undo(){
-  if (states.length > 1){
+  const clonedCurrentWeather: number[] = [...state.currentWeather];
+  const clonedHarvestedPlants: number[] = [...state.harvestedPlants];
+
+  const clonedState: GameState = {
+    grid: clonedGrid,
+    currentWeather: clonedCurrentWeather,
+    harvestedPlants: clonedHarvestedPlants,
+  };
+
+  return clonedState;
+}
+
+function undo() {
+  if (states.length > 1) {
     const currentState = states.pop();
-    redoStack.push(currentState!);
-    game.applyGameState(states[states.length-1]);
+    redoStack.push(cloneGameState(currentState!));
+    game.applyGameState(cloneGameState(states[states.length - 1]));
     console.log("game state after undo: ", getCurrentGameState(game));
-  }else{
+  } else {
     console.log("Undo not available.");
   }
 }
 
-function redo(){
-  if (redoStack.length > 0){
-    const popped = redoStack.pop();
-    states.push(popped!);
-    game.applyGameState(popped!);
+function redo() {
+  if (redoStack.length > 0) {
+    const popped = cloneGameState(redoStack.pop()!);
+    states.push(popped);
+    game.applyGameState(popped);
     console.log("game state after redo: ", getCurrentGameState(game));
-  }else{
+  } else {
     console.log("Redo not available.");
   }
 }
 
 // delete local storage game data and start game over
-function deleteLocalStorage(){
-  if (confirm("Are you sure you want to delete all game data and start over?")){
+function deleteLocalStorage() {
+  if (
+    confirm("Are you sure you want to delete all game data and start over?")
+  ) {
     localStorage.removeItem("states");
     states = [];
     redoStack = [];
     game = new Game(GAME_SIZE);
     farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 
-
     drawGame();
     game.updateGame();
   }
-
 }
+
+// save current game state to list of saved game states + store saved game states in localstorage
+function manualSave() {
+  const input = prompt("Enter a name for your save file (optional) : ");
+  const saveName = input ? input : `saved_${getCurrentDateTime()}`;
+
+  savedGameStates.set(
+    saveName,
+    states.map((state) => cloneGameState(state))
+  );
+  alert(`Game saved as ${saveName}.\nPress "L" key to load a saved game.`);
+
+  localStorage.setItem(
+    "savedGames",
+    JSON.stringify(Array.from(savedGameStates.entries()))
+  );
+
+  console.log("setting saved games to localstore: ", savedGameStates);
+}
+
+//prompts the user to enter the save state which they want to load
+function loadSavedGame() {
+  let promptText = `Please enter the number next to the save state you want to load.`;
+  const stateArray = Array.from(savedGameStates.entries());
+
+  let index = 1;
+  for (const state of stateArray) {
+    promptText += `\n${index}: ${state[0]}`;
+    index++;
+  }
+  const input = prompt(promptText);
+  if (input !== null) {
+    const selectedInteger = parseInt(input, 10); //convert the input to an integer
+    // if a valid integer, use it to apply chosen Game state
+    if (
+      !isNaN(selectedInteger) &&
+      selectedInteger >= 1 &&
+      selectedInteger <= stateArray.length
+    ) {
+      const selectedName = stateArray[selectedInteger-1][0];
+      
+      if (savedGameStates.has(selectedName)) {
+        console.log("selected: ", selectedName);
+        const states = savedGameStates
+          .get(selectedName)!
+          .map((state) => cloneGameState(state));
+        console.log("states: ", states);
+        const newestState = states[states.length - 1];
+        console.log("newest state: ", newestState);
+        game.applyGameState(cloneGameState(states[states.length - 1]));
+      }
+    }
+  }
+}
+
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 interface GameState {
@@ -525,7 +666,8 @@ interface GameState {
   currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
   harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
 }
-let states: GameState[] = [];
+
+let states: GameState[] = []; //history of game states
 let redoStack: GameState[] = [];
 
 //character movement and controls
@@ -534,14 +676,14 @@ document.addEventListener("keydown", (event) => {
     case "t": {
       redoStack = [];
       game.updateGame();
-      game.grid.forEach((row) =>{
+      game.grid.forEach((row) => {
         row.forEach((cell) => {
-          if (cell.plant) {
+          if (cell.plant instanceof Plant) {
             cell.plant.simulateGrowth();
           }
         });
       });
-      
+
       //add current game state
       states.push(getCurrentGameState(game));
       notifyChange("stateChanged");
@@ -578,16 +720,24 @@ document.addEventListener("keydown", (event) => {
     case "r":
       redo();
       break;
-    
+    //delete auto-save state and start game over
     case "d":
       deleteLocalStorage();
+      break;
+    //manually save game state
+    case "s":
+      manualSave();
+      break;
+    //load saved game
+    case "l":
+      loadSavedGame();
       break;
   }
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
   drawGame();
 });
 
-document.addEventListener("stateChanged", ()=> {
+document.addEventListener("stateChanged", () => {
   game.updateUI();
   game.draw();
 
