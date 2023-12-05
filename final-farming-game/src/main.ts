@@ -9,7 +9,7 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
-const savedGameStates = new Map<string, GameState[]>();
+let savedGameStates = new Map<string, GameState[]>();
 
 //Eventually this structure should be specified by a JSON object, map will work for now
 const plantManifest = [
@@ -226,7 +226,9 @@ class Game {
         states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
       this.weatherDegree = states[states.length - 1].currentWeather[1];
       console.log("states: ", states);
-      this.updateCurrentCellUI(this.grid[Math.floor(this.size/2)][Math.floor(this.size/2)]);
+      this.updateCurrentCellUI(
+        this.grid[Math.floor(this.size / 2)][Math.floor(this.size / 2)]
+      );
       this.updateUI();
     } else {
       this.grid = Array.from({ length: this.size }, (_, i) =>
@@ -248,12 +250,11 @@ class Game {
 
     //add saved games states if available
     const storedData = localStorage.getItem("savedGames");
-    let restoredMap: Map<string, GameState[]>;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     if (storedData) {
       const parsedData = JSON.parse(storedData) as [string, GameState[]][];
-      restoredMap = new Map<string, GameState[]>(parsedData);
-      console.log("cached saved games: ", restoredMap);
+      savedGameStates = new Map<string, GameState[]>(parsedData);
+      console.log("cached saved games: ", savedGameStates);
     }
   }
 
@@ -621,13 +622,14 @@ function deleteLocalStorage() {
 // save current game state to list of saved game states + store saved game states in localstorage
 function manualSave() {
   const input = prompt("Enter a name for your save file (optional) : ");
-  const saveName = input ? input : `saved_${getCurrentDateTime()}`;
+  if (input == null) return; //exit if no input
+  const saveName = (input == "")? `saved_${getCurrentDateTime()}`: input; //default name if input is empty
 
   savedGameStates.set(
     saveName,
     states.map((state) => cloneGameState(state))
   );
-  alert(`Game saved as ${saveName}.\nPress "L" key to load a saved game.`);
+  alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
 
   localStorage.setItem(
     "savedGames",
@@ -656,17 +658,18 @@ function loadSavedGame() {
       selectedInteger >= 1 &&
       selectedInteger <= stateArray.length
     ) {
-      const selectedName = stateArray[selectedInteger-1][0];
+      const selectedName = stateArray[selectedInteger - 1][0];
 
       if (savedGameStates.has(selectedName)) {
         console.log("selected: ", selectedName);
-        const states = savedGameStates
+        states = savedGameStates
           .get(selectedName)!
           .map((state) => cloneGameState(state));
         console.log("states: ", states);
         const newestState = states[states.length - 1];
         console.log("newest state: ", newestState);
         game.applyGameState(cloneGameState(states[states.length - 1]));
+        redoStack = [];
       }
     }
   }
@@ -745,6 +748,15 @@ document.addEventListener("stateChanged", () => {
   game.updateUI();
   game.draw();
   localStorage.setItem("states", JSON.stringify(states));
+  
+});
+
+//store saved games before player exits
+window.addEventListener("beforeunload", ()=>{
+  localStorage.setItem(
+    "savedGames",
+    JSON.stringify(Array.from(savedGameStates.entries()))
+  );
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
@@ -752,7 +764,6 @@ document.addEventListener("stateChanged", () => {
 let game = new Game(GAME_SIZE);
 let farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 drawGame();
-
 
 /*
 function runScenarioTest() {
