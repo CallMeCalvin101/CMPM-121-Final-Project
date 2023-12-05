@@ -87,14 +87,14 @@ class Character {
     public plants: Plant[]
   ) {}
 
-  draw() {
-    ctx!.beginPath();
-    ctx!.arc(this.posX, this.posY, 20, 0, 2 * Math.PI, false);
-    ctx!.fillStyle = "blue";
-    ctx!.fill();
-    ctx!.lineWidth = 2;
-    ctx!.strokeStyle = "black";
-    ctx!.stroke();
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    ctx.arc(this.posX, this.posY, 20, 0, 2 * Math.PI, false);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "black";
+    ctx.stroke();
   }
 
   dragPos(direction: "N" | "E" | "S" | "W", magnitude: number) {
@@ -278,15 +278,15 @@ class Game {
     states.push(getCurrentGameState(this));
   }
 
-  draw() {
+  draw(ctx: CanvasRenderingContext2D) {
     for (let i = 0; i < this.size; i++) {
       for (let j = 0; j < this.size; j++) {
         const x = j * CELL_SIZE;
         const y = i * CELL_SIZE;
         const cell = this.grid[i][j];
 
-        ctx!.fillStyle = cell.plant ? cell.plant.color : "saddlebrown";
-        ctx!.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+        ctx.fillStyle = cell.plant ? cell.plant.color : "saddlebrown";
+        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
       }
     }
   }
@@ -425,8 +425,8 @@ function getCurrentDateTime() {
 // Draw game
 function drawGame() {
   ctx!.clearRect(0, 0, gameWidth, gameHeight);
-  game.draw();
-  farmer.draw();
+  game.draw(ctx!);
+  farmer.draw(ctx!);
 }
 
 function promptPlantSelection(): string {
@@ -746,7 +746,7 @@ document.addEventListener("keydown", (event) => {
 //observer for state changed event will update UI elements and redraw game
 document.addEventListener("stateChanged", () => {
   game.updateUI();
-  game.draw();
+  game.draw(ctx!);
   localStorage.setItem("states", JSON.stringify(states));
   
 });
