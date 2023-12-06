@@ -68,7 +68,7 @@ const plantManifest = [
   }, // Fuchsia
 ];
 
-const allPlants: Map<number, Plant> = new Map();
+const allPlants: Map<number, Plant> = new Map<number,Plant>();
 
 const MAX_PLANT_GROWTH = 15;
 
@@ -293,7 +293,7 @@ class Game {
       for (let j = 0; j < this.size; j++) {
         const randomValue = Math.random();
 
-        let newCell: Cell = {
+        const newCell: Cell = {
           type: cellType.dirt,
           rowIndex: i,
           colIndex: j,
@@ -488,16 +488,6 @@ function promptPlantSelection(): string {
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
 
-//returns index representation of plant based on position on plantManifest
-function getPlantIndex(plantName: string): number {
-  plantManifest.find((plantType, index) => {
-    if (plantType.name.toLowerCase() === plantName.toLowerCase()) {
-      return index;
-    }
-  });
-  return -1;
-}
-
 //removes a plant from current cell
 function reapPlant(currentCell: Cell) {
   const confirmReap = window.confirm(
@@ -507,13 +497,13 @@ function reapPlant(currentCell: Cell) {
   if (confirmReap) {
     if (currentCell.type != cellType.crabgrass) {
       // do not add weeds to inventory
-      farmer.plants.push(allPlants.get(currentCell.type)!);
       const reapedPlant = getNameFromType(currentCell.type);
       if (currentCell.growthLevel >= MAX_PLANT_GROWTH) {
         // player only collects plant if it was ready for harvest
-        const plantIndex = getPlantIndex(reapedPlant);
-        plantsHarvested[plantIndex] += 1;
-        console.log("HARVEST:   ", plantsHarvested[plantIndex]);
+        farmer.plants.push(allPlants.get(currentCell.type)!);
+        plantsHarvested[currentCell.type-2] += 1;
+        console.log("HARVESTED ", reapedPlant, "! ", plantsHarvested[currentCell.type], " ", reapedPlant, "s in inventory");
+        game.updateUI();
       }
     }
     console.log(
@@ -591,17 +581,6 @@ function getCurrentGameState(game: Game): GameState {
 
 //returns a deep copy of a GameState
 function cloneGameState(state: GameState): GameState {
-  // helper function to clone a Plant
-  function clonePlant(plant: Plant | null): Plant | null {
-    return plant
-      ? new Plant(
-          plant.name,
-          plant.plantType,
-          plant.sunRequisite,
-          plant.waterRequisite
-        )
-      : null;
-  }
 
   // Clone grid of cells, including the Plant objects
   const clonedGrid: ArrayBuffer = state.grid.slice(0);
