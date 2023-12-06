@@ -98,6 +98,12 @@ interface GameState {
   harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
 }
 
+interface EncodedState {
+  grid: string;
+  currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
+  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
+}
+
 class Character {
   constructor(
     public posX: number,
@@ -217,8 +223,16 @@ class Game {
     this.size = gridSize;
     // check to see if autosave state is available
     const localStore = localStorage.getItem("states");
-    if (false) {
-      states = JSON.parse(localStore) as GameState[];
+    if (localStore) {
+      const encodedStates = JSON.parse(localStore) as EncodedState[];
+      console.log(encodedStates);
+      states = encodedStates.map((encodedState) => {
+        return {
+          grid: base64ToArrayBuffer(encodedState.grid),
+          currentWeather: encodedState.currentWeather,
+          harvestedPlants: encodedState.harvestedPlants
+        };
+      });
       this.grid = states[states.length - 1].grid;
       this.weatherCondition =
         states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
@@ -429,6 +443,25 @@ class Game {
 // notify observer of change by dispatching a new event
 function notifyChange(name: string) {
   document.dispatchEvent(new Event(name));
+}
+
+// convert ArrayBuffer to Base64
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const uint8Array = new Uint8Array(buffer);
+  const binaryString = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), "");
+  console.log("buffer to b64: binary", binaryString);
+  return btoa(binaryString);
+}
+
+// convert Base64 to ArrayBuffer
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  console.log("b64 to buffer: binary", binaryString);
+  return bytes.buffer;
 }
 
 //returns string based on current date + time
@@ -675,9 +708,7 @@ function loadSavedGame() {
         states = savedGameStates
           .get(selectedName)!
           .map((state) => cloneGameState(state));
-        console.log("states: ", states);
-        const newestState = states[states.length - 1];
-        console.log("newest state: ", newestState);
+        
         game.applyGameState(cloneGameState(states[states.length - 1]));
         redoStack = [];
       }
@@ -775,9 +806,32 @@ document.addEventListener("keydown", (event) => {
 
       //add current game state
       states.push(getCurrentGameState(game));
+
+      //test arraybuffer conversion
+      const encodedStates: EncodedState[] = states.map((gameState) => {
+        return {
+          grid: arrayBufferToBase64(gameState.grid),
+          currentWeather: gameState.currentWeather,
+          harvestedPlants: gameState.harvestedPlants
+        };
+      });
+      const stringStates = JSON.stringify(encodedStates);
+
+      const parsed = JSON.parse(stringStates) as EncodedState[];
+      console.log(parsed);
+      const parsedStates = parsed.map((encodedState) => {
+        return {
+          grid: base64ToArrayBuffer(encodedState.grid),
+          currentWeather: encodedState.currentWeather,
+          harvestedPlants: encodedState.harvestedPlants
+        };
+      });
+      console.log("comparing states v parsedStates");
+      console.log(states);
+      console.log(parsedStates);
+
       notifyChange("stateChanged");
 
-      console.log("saved states: ", states);
       break;
     }
     case "ArrowLeft":
@@ -829,7 +883,14 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("stateChanged", () => {
   game.updateUI();
   game.draw(ctx!);
-  localStorage.setItem("states", JSON.stringify(states));
+  const encodedStates: EncodedState[] = states.map((gameState) => {
+    return {
+      grid: arrayBufferToBase64(gameState.grid),
+      currentWeather: gameState.currentWeather,
+      harvestedPlants: gameState.harvestedPlants
+    };
+  });
+  localStorage.setItem("states", JSON.stringify(encodedStates));
 });
 
 //store saved games before player exits
