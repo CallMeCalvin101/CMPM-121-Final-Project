@@ -874,9 +874,20 @@ document.addEventListener("stateChanged", () => {
 
 //store saved games before player exits
 window.addEventListener("beforeunload", () => {
+  const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<string, EncodedState[]>();
+  savedGameStates.forEach((gameStates, key)=>{
+    const encodedGameStates: EncodedState[] = gameStates.map((gameState)=>{
+      return {
+        grid: arrayBufferToBase64(gameState.grid),
+        currentWeather: gameState.currentWeather,
+        harvestedPlants: gameState.harvestedPlants,
+      };
+    }) as EncodedState[];
+    encodedSavedGameStates.set(key, encodedGameStates);
+  });
   localStorage.setItem(
     "savedGames",
-    JSON.stringify(Array.from(savedGameStates.entries()))
+    JSON.stringify(Array.from(encodedSavedGameStates.entries()))
   );
 });
 
