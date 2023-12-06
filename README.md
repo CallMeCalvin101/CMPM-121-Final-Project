@@ -39,7 +39,7 @@ Our group didn’t really have much plans on what we wanted to do together at th
 ## F0 devblog
 F0 D:  Depending on the current weather, there is a different chance of each cell getting water and sun. When it rains, there's a 70% chance of a cell getting 2 levels of water and a 20% chance of getting sun. When it's sunny, there's a 70% chance for a cell to lose a level of water and a 80% chance to get sun. It is not possible to lose water levels on a rainy day but there is also no ways to gain water levels on a sunny day. Each cell's sun is independent of each other.
 
-# Tony Guizar & Vincent Kurniadjaja - 12/6/2023
+# Tony Guizar & Vincent Kurniadjaja & Steven Ren - 12/6/2023
 ## F1 devblog
 ## F1 A: Bytearray diagram
 ![F1.a data structure diagram](./Devlog%20images/IMG_0020.png)
@@ -52,3 +52,16 @@ The player is able to manually save their current game using the “S” key. Th
 
 ## F1 D:
 The implicit auto-save feature is implemented as an array of `GameState` objects that are saved to localstorage. Whenever a player interacts with a cell, or passes time using the “t” key, the new game state is pushed to a `states` array that holds the game state history for the current game. When the game is loaded, the code checks if there is a “states” key in localstorage, and if there is, that game is loaded into the current game, allowing players to resume play in the event of an unexpected quit.
+
+## Reflection:
+Our previous code wasn’t compatible with an und/redo button so we had to refactor our code. We added game states which act as a stack and push and pop accordingly to the player’s actions to simulate a redo and undo action. These game states update whenever a cell is interacted with and tracks which element(s) the player manipulated.
+
+One of the larger refactoring overhauls we did to our code came in when we implemented the Byte Array. In our initial implementation of the grid, we basically tracked row, column, and the plant in each cell. However, there were issues with this implementation that prevented a smooth conversion into a byte array. Since we stored an entire class into a cell in the form of a plant, it made it infeasible to store the entirety of a plant and needing to parse its 9 or so parameters.
+
+So before making the byte array, we stripped out all of the mutable forms of the plant and stored it into the cell object. In our new cell class, we tracked that cell’s position as rows and columns, its current water level, the sun that cell is receiving, its growth level, and what type of plant it was. When refactoring code, we also noticed how the only difference between plants were its requirements to grow, which led to us to define the cellTypes enumerator that defined all possible cells that a cell could be. We later expanded this to include the dirt (empty cell) and well as the weed (a cell that must be reaped first). This new cell representation is conveniently created with 6 bytes
+
+After redefining a cell, we then refactored our grid class to go from a cell matrix (Cell[][]) into a contiguous byte array whose size is equal to the number of available grids multiplied by the size of a cell (6). Actually implementing the byte array was simple, we chose to do an array of structures to store our data, which allowed us to look at 6 adjacent bytes at a time to access our cell data.
+
+The problem came with trying to fix all of our existing code after messing with the plant class and the grid, 2 aspects of our code which many other objects depend upon. Although it did take a bit to refactor all of the code, it wasn’t that difficult to convert all of the old grid matrices into the new byte array, since when implementing the grid array, we had helper functions that was able to index and store cells using rows and columns, exactly how we stored cells in the old matrix. The more difficult aspects of the refactoring came from dealing with the manipulation of the matrix when we saved and loaded objects. Since we converted the grid into a json in order to save all of the game's states, a lot of errors came up since byte arrays are more finicky when doing that conversion as opposed to a double array.
+
+Although this cleaning of the code is tedious, it is necessary in order to have a smoother development process down the line. Even when implementing the code and reflecting on it, some of the immediate next steps is to refactor the refactored code since we found out that there are ways to further simplify the code.
