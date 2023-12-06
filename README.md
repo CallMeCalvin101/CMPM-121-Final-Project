@@ -38,3 +38,17 @@ Our group didn’t really have much plans on what we wanted to do together at th
 # Steven Ren - 11/29/2023
 ## F0 devblog
 F0 D:  Depending on the current weather, there is a different chance of each cell getting water and sun. When it rains, there's a 70% chance of a cell getting 2 levels of water and a 20% chance of getting sun. When it's sunny, there's a 70% chance for a cell to lose a level of water and a 80% chance to get sun. It is not possible to lose water levels on a rainy day but there is also no ways to gain water levels on a sunny day. Each cell's sun is independent of each other.
+
+# Tony Guizar & Vincent Kurniadjaja - 12/6/2023
+## F1 devblog
+## F1 A: Bytearray diagram
+![F1.a data structure diagram](./Devlog%20images/IMG_0020.png)
+
+## F1 B:
+The undo/redo system is implemented by tracking game states across play. When the player interacts with a cell, the new game state is pushed to an array of `GameState` objects. When a player wants to undo their last action, the current game state is popped from the `states` array and pushed to a `redoStack` array. The previous game state (which is now the newest element in the `state` array is then applied to the current game state and all UI is updated. Similarly, when the player has a redo action available, the gamestate is popped from the `redoStack` and pushed to the `states` array and is then applied to the current game state, then the UI is updated.
+
+## F1 C:
+The player is able to manually save their current game using the “S” key. The player is prompted to select an optional name for their saved game. A saved game is just an array of `GameState` objects and we used a map called `savedGameStates` that maps strings(names of saved games) to arrays of `GameState` objects. We have an event listener for “beforeunload” event that will save the `savedGameStates` map to local storage before the document is unloaded. The player can also load a saved game using the “L” key. The player will be prompted to select a saved game and the array of `GameStates` will replace the current `states` array, allowing the player to load a saved game while still having access to their game state history, preserving the undo/redo system across loaded games. The player can also use the “d” key to delete all saved games and start the game over.
+
+## F1 D:
+The implicit auto-save feature is implemented as an array of `GameState` objects that are saved to localstorage. Whenever a player interacts with a cell, or passes time using the “t” key, the new game state is pushed to a `states` array that holds the game state history for the current game. When the game is loaded, the code checks if there is a “states” key in localstorage, and if there is, that game is loaded into the current game, allowing players to resume play in the event of an unexpected quit.
