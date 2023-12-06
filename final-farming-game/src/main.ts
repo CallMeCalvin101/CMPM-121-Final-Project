@@ -646,8 +646,10 @@ function deleteLocalStorage() {
     confirm("Are you sure you want to delete all game data and start over?")
   ) {
     localStorage.removeItem("states");
+    localStorage.removeItem("savedGames");
     states = [];
     redoStack = [];
+    savedGameStates.clear();
     game = new Game(GAME_SIZE);
     farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 
