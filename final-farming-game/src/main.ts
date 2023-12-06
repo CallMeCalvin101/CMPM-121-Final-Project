@@ -225,7 +225,6 @@ class Game {
     const localStore = localStorage.getItem("states");
     if (localStore) {
       const encodedStates = JSON.parse(localStore) as EncodedState[];
-      console.log(encodedStates);
       states = encodedStates.map((encodedState) => {
         return {
           grid: base64ToArrayBuffer(encodedState.grid),
@@ -237,7 +236,6 @@ class Game {
       this.weatherCondition =
         states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
       this.weatherDegree = states[states.length - 1].currentWeather[1];
-      console.log("states: ", states);
 
       const midIndex = Math.floor(this.size / 2);
       this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
@@ -261,7 +259,6 @@ class Game {
     if (storedData) {
       const parsedData = JSON.parse(storedData) as [string, GameState[]][];
       savedGameStates = new Map<string, GameState[]>(parsedData);
-      console.log("cached saved games: ", savedGameStates);
     }
   }
 
@@ -422,7 +419,6 @@ class Game {
     game.weatherCondition = state.currentWeather[0] == 0 ? "sunny" : "rainy";
     game.weatherDegree = state.currentWeather[1];
 
-    console.log("applied: ", cloneGameState(state));
     notifyChange("stateChanged");
   }
 
@@ -449,7 +445,6 @@ function notifyChange(name: string) {
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const uint8Array = new Uint8Array(buffer);
   const binaryString = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), "");
-  console.log("buffer to b64: binary", binaryString);
   return btoa(binaryString);
 }
 
@@ -460,7 +455,6 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-  console.log("b64 to buffer: binary", binaryString);
   return bytes.buffer;
 }
 
@@ -629,7 +623,6 @@ function undo() {
     const currentState = states.pop();
     redoStack.push(cloneGameState(currentState!));
     game.applyGameState(cloneGameState(states[states.length - 1]));
-    console.log("game state after undo: ", getCurrentGameState(game));
   } else {
     console.log("Undo not available.");
   }
@@ -640,7 +633,6 @@ function redo() {
     const popped = cloneGameState(redoStack.pop()!);
     states.push(popped);
     game.applyGameState(popped);
-    console.log("game state after redo: ", getCurrentGameState(game));
   } else {
     console.log("Redo not available.");
   }
@@ -679,7 +671,6 @@ function manualSave() {
     JSON.stringify(Array.from(savedGameStates.entries()))
   );
 
-  console.log("setting saved games to localstore: ", savedGameStates);
 }
 
 //prompts the user to enter the save state which they want to load
@@ -704,7 +695,6 @@ function loadSavedGame() {
       const selectedName = stateArray[selectedInteger - 1][0];
 
       if (savedGameStates.has(selectedName)) {
-        console.log("selected: ", selectedName);
         states = savedGameStates
           .get(selectedName)!
           .map((state) => cloneGameState(state));
@@ -803,32 +793,6 @@ document.addEventListener("keydown", (event) => {
           simulateGrowth(game.getCell(i, j));
         }
       }
-
-      //add current game state
-      states.push(getCurrentGameState(game));
-
-      //test arraybuffer conversion
-      const encodedStates: EncodedState[] = states.map((gameState) => {
-        return {
-          grid: arrayBufferToBase64(gameState.grid),
-          currentWeather: gameState.currentWeather,
-          harvestedPlants: gameState.harvestedPlants
-        };
-      });
-      const stringStates = JSON.stringify(encodedStates);
-
-      const parsed = JSON.parse(stringStates) as EncodedState[];
-      console.log(parsed);
-      const parsedStates = parsed.map((encodedState) => {
-        return {
-          grid: base64ToArrayBuffer(encodedState.grid),
-          currentWeather: encodedState.currentWeather,
-          harvestedPlants: encodedState.harvestedPlants
-        };
-      });
-      console.log("comparing states v parsedStates");
-      console.log(states);
-      console.log(parsedStates);
 
       notifyChange("stateChanged");
 
