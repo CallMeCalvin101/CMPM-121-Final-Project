@@ -11,51 +11,64 @@ const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
 let savedGameStates = new Map<string, GameState[]>();
 
+const cellType = Object.freeze({
+  dirt: 0,
+  crabgrass: 1,
+  sunflower: 2,
+  rose: 3,
+  daffodil: 4,
+  lily: 5,
+  marigold: 6,
+  fuchsia: 7,
+});
+
 //Eventually this structure should be specified by a JSON object, map will work for now
 const plantManifest = [
   {
     name: "Sunflower",
-    type: "flower",
+    type: cellType.sunflower,
     sunRequisite: 3,
     waterRequisite: 2,
     color: "yellow",
   },
   {
     name: "Rose",
-    type: "flower",
+    type: cellType.rose,
     sunRequisite: 2,
     waterRequisite: 3,
     color: "pink",
   },
   {
     name: "Daffodil",
-    type: "flower",
+    type: cellType.daffodil,
     sunRequisite: 3,
     waterRequisite: 2,
     color: "#FFD700",
   }, // Gold
   {
     name: "Lily",
-    type: "flower",
+    type: cellType.lily,
     sunRequisite: 2,
     waterRequisite: 3,
     color: "#FFFFFF",
   }, // White
   {
     name: "Marigold",
-    type: "flower",
+    type: cellType.marigold,
     sunRequisite: 4,
     waterRequisite: 2,
     color: "#FFA500",
   }, // Orange
   {
     name: "Fuchsia",
-    type: "flower",
+    type: cellType.fuchsia,
     sunRequisite: 3,
     waterRequisite: 3,
     color: "#FF00FF",
   }, // Fuchsia
 ];
+
+const allPlants: Map<number, Plant> = new Map();
 
 const MAX_PLANT_GROWTH = 15;
 
@@ -69,13 +82,18 @@ const CELL_SIZE = gameWidth / GAME_SIZE;
 
 //------------------------------------ Class def ------------------------------------------------------------------------------------
 interface Cell {
+  type: number;
   rowIndex: number;
   colIndex: number;
-  plant: Plant | null;
+  waterLevel: number;
+  sunLevel: number;
+  growthLevel: number;
 }
 
+const CELL_BYTES = 6;
+
 interface GameState {
-  grid: Cell[][];
+  grid: ArrayBuffer;
   currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
   harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
 }
@@ -136,81 +154,61 @@ class Character {
 
   //return the cell and its properties
   getCurrentCell(): Cell | null {
-    const gridX = Math.floor(this.posX / CELL_SIZE);
-    const gridY = Math.floor(this.posY / CELL_SIZE);
+    const gridY = Math.floor(this.posX / CELL_SIZE);
+    const gridX = Math.floor(this.posY / CELL_SIZE);
 
-    return game.grid[gridY][gridX];
+    return game.getCell(gridX, gridY);
   }
 }
 
 class Plant {
-  name: string;
-  plantType: string;
-
-  sunLevel: number;
-  waterLevel: number;
-  growthLevel: number;
-  sunRequisite: number;
-  waterRequisite: number;
-  rowIndex: number;
-  colIndex: number;
-  color: string;
-
   constructor(
-    name: string,
-    plantType: string,
-    sunRequisite: number,
-    waterRequisite: number,
-    color: string,
-    rowIndex: number,
-    colIndex: number
-  ) {
-    this.sunLevel = 0;
-    this.waterLevel = 0;
-    this.growthLevel = 0;
-    this.name = name;
-    this.sunRequisite = sunRequisite;
-    this.waterRequisite = waterRequisite;
-    this.plantType = plantType;
-    this.color = color;
-    this.rowIndex = rowIndex;
-    this.colIndex = colIndex;
+    readonly name: string,
+    readonly plantType: number,
+    readonly sunRequisite: number,
+    readonly waterRequisite: number
+  ) {}
+}
+
+function simulateGrowth(cell: Cell) {
+  if (cell.type == cellType.dirt || cell.type == cellType.crabgrass) {
+    return;
   }
 
-  simulateGrowth() {
-    // Simulate general growth based on accumulated sun and water levels
-    if (
-      this.sunLevel >= this.sunRequisite &&
-      this.waterLevel >= this.waterRequisite
-    ) {
-      if (this.growthLevel < MAX_PLANT_GROWTH) {
-        this.growthLevel += 1;
-        console.log(
-          this.name,
-          " in cell (",
-          this.rowIndex,
-          ",",
-          this.colIndex,
-          ") is growing! Growth level:",
-          this.growthLevel
-        );
-      } else {
-        console.log(
-          this.name,
-          "in cell: (",
-          this.rowIndex,
-          ",",
-          this.colIndex,
-          ") is ready for harvest!"
-        );
-      }
+  const plantType = allPlants.get(cell.type)!;
+  // Simulate general growth based on accumulated sun and water levels
+  if (
+    cell.sunLevel >= plantType.sunRequisite &&
+    cell.waterLevel >= plantType.waterRequisite
+  ) {
+    if (cell.growthLevel < MAX_PLANT_GROWTH) {
+      cell.growthLevel += 1;
+      console.log(
+        plantType.name,
+        " in cell (",
+        cell.rowIndex,
+        ",",
+        cell.colIndex,
+        ") is growing! Growth level:",
+        cell.growthLevel
+      );
+      game.storeCell(cell);
+    } else {
+      console.log(
+        plantType.name,
+        "in cell: (",
+        cell.rowIndex,
+        ",",
+        cell.colIndex,
+        ") is ready for harvest!"
+      );
     }
   }
 }
 
 class Game {
   size: number;
-  grid: Cell[][];
+  grid: ArrayBuffer;
   weatherCondition: string; // 'sunny' or 'rainy'
   weatherDegree: number; //magnitude of sun or rain
 
@@ -219,32 +217,27 @@ class Game {
     this.size = gridSize;
     // check to see if autosave state is available
     const localStore = localStorage.getItem("states");
-    if (localStore) {
+    if (false) {
       states = JSON.parse(localStore) as GameState[];
       this.grid = states[states.length - 1].grid;
       this.weatherCondition =
         states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
       this.weatherDegree = states[states.length - 1].currentWeather[1];
       console.log("states: ", states);
-      this.updateCurrentCellUI(
-        this.grid[Math.floor(this.size / 2)][Math.floor(this.size / 2)]
-      );
+
+      const midIndex = Math.floor(this.size / 2);
+      this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
       this.updateUI();
     } else {
-      this.grid = Array.from({ length: this.size }, (_, i) =>
-        Array.from({ length: this.size }, (_, j) => ({
-          rowIndex: i,
-          colIndex: j,
-          plant: null,
-        }))
-      );
+      const totalGridSize = gridSize * gridSize;
+      this.grid = new ArrayBuffer(totalGridSize * CELL_BYTES);
 
       this.weatherCondition = "sunny";
       this.weatherDegree = 3;
       this.generateRandomGrid();
 
       const midIndex = Math.floor(this.size / 2);
-      this.updateCurrentCellUI(this.grid[midIndex][midIndex]);
+      this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
       this.updateGame();
     }
 
@@ -258,21 +251,51 @@ class Game {
     }
   }
 
+  storeCell(cell: Cell) {
+    const gridView = new DataView(this.grid);
+    const byteOffset = (cell.rowIndex * this.size + cell.colIndex) * CELL_BYTES;
+
+    gridView.setUint8(byteOffset, cell.type);
+    gridView.setUint8(byteOffset + 1, cell.rowIndex);
+    gridView.setUint8(byteOffset + 2, cell.colIndex);
+    gridView.setUint8(byteOffset + 3, cell.waterLevel);
+    gridView.setUint8(byteOffset + 4, cell.sunLevel);
+    gridView.setUint8(byteOffset + 5, cell.growthLevel);
+  }
+
+  getCell(row: number, col: number): Cell {
+    const gridView = new DataView(this.grid);
+    const byteOffset = (row * this.size + col) * CELL_BYTES;
+
+    const type = gridView.getUint8(byteOffset);
+    const rowIndex = gridView.getUint8(byteOffset + 1);
+    const colIndex = gridView.getUint8(byteOffset + 2);
+    const waterLevel = gridView.getUint8(byteOffset + 3);
+    const sunLevel = gridView.getUint8(byteOffset + 4);
+    const growthLevel = gridView.getUint8(byteOffset + 5);
+
+    return { type, rowIndex, colIndex, waterLevel, sunLevel, growthLevel };
+  }
+
   generateRandomGrid() {
     for (let i = 0; i < this.size; i++) {
       for (let j = 0; j < this.size; j++) {
         const randomValue = Math.random();
+
+        let newCell: Cell = {
+          type: cellType.dirt,
+          rowIndex: i,
+          colIndex: j,
+          waterLevel: 0,
+          sunLevel: 0,
+          growthLevel: 0,
+        };
+
         if (randomValue < 0.07) {
-          this.grid[i][j].plant = new Plant(
-            "Crabgrass",
-            "weed",
-            1,
-            1,
-            "green",
-            this.grid[i][j].rowIndex,
-            this.grid[i][j].colIndex
-          );
+          newCell.type = cellType.crabgrass;
         }
+
+        this.storeCell(newCell);
       }
     }
     states.push(getCurrentGameState(this));
@@ -283,9 +306,9 @@ class Game {
       for (let j = 0; j < this.size; j++) {
         const x = j * CELL_SIZE;
         const y = i * CELL_SIZE;
-        const cell = this.grid[i][j];
+        const cell = this.getCell(i, j);
 
-        ctx.fillStyle = cell.plant ? cell.plant.color : "saddlebrown";
+        ctx.fillStyle = getColorFromType(cell.type);
         ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
       }
     }
@@ -337,48 +360,49 @@ class Game {
 
   //update water and sun levels for all plants on grid
   simulateWeather() {
-    if (this.weatherCondition === "rainy") {
-      const sunChance = 0.2;
-      this.grid.forEach((row) =>
-        row.forEach((cell) => {
-          if (cell.plant) {
-            cell.plant.waterLevel += this.weatherDegree; // on a rainy day - 20% chance of getting full sun power, 80% chance getting half sun power
-            cell.plant.sunLevel =
-              cell.plant && Math.random() < sunChance
-                ? Math.floor(this.weatherDegree / 2)
-                : this.weatherDegree;
+    for (let i = 0; i < this.size; i++) {
+      for (let j = 0; j < this.size; j++) {
+        const cell = this.getCell(i, j);
+
+        if (this.weatherCondition === "rainy") {
+          const sunChance = 0.2;
+          cell.waterLevel += this.weatherDegree;
+          if (Math.random() < sunChance) {
+            cell.sunLevel = this.weatherDegree;
+          } else {
+            cell.sunLevel = Math.floor(this.weatherDegree / 2);
           }
-        })
-      );
-    } else if (this.weatherCondition === "sunny") {
-      const rainChance = 0.1;
-      this.grid.forEach((row) =>
-        row.forEach((cell) => {
-          if (cell.plant) {
-            // on a sunny day, plants dry up unless 10% chance it rains
-            if (Math.random() > rainChance) cell.plant.waterLevel = 1;
-            cell.plant.sunLevel = this.weatherDegree;
-          }
-        })
-      );
+        } else if (this.weatherCondition === "sunny") {
+          const rainChance = 0.1;
+          if (Math.random() > rainChance) cell.waterLevel = 1;
+          cell.sunLevel = this.weatherDegree;
+        }
+
+        this.storeCell(cell);
+      }
     }
+
+    /* Old Formulas used to calculate sun weather during rainfall
+      NOTE: cell does not have plant object
+      cell.plant.waterLevel += this.weatherDegree; // on a rainy day - 20% chance of getting full sun power, 80% chance getting half sun power
+      cell.plant.sunLevel =
+      cell.plant && Math.random() < sunChance
+        ? Math.floor(this.weatherDegree / 2)
+        : this.weatherDegree; 
+      */
   }
 
   updateCurrentCellUI(cell: Cell) {
     const cellElement = document.getElementById("cell");
-    if (cell.plant) {
-      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}]. <strong>Plant Type:</strong> ${cell.plant?.name} <strong>Water Level:</strong> ${cell.plant?.waterLevel}. <strong>Growth Level:<strong> ${cell.plant?.growthLevel}`;
+    if (cell.type) {
+      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}]. <strong>Plant Type:</strong> ${cell.type} <strong>Water Level:</strong> ${cell.waterLevel}. <strong>Growth Level:<strong> ${cell.growthLevel}`;
     } else {
       cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}], There is no Plant here`;
     }
   }
 
   applyGameState(state: GameState) {
-    for (let row = 0; row < state.grid.length; row++) {
-      for (let col = 0; col < state.grid[row].length; col++) {
-        game.grid[row][col] = { ...state.grid[row][col] };
-      }
-    }
+    game.grid = state.grid.slice(0);
     plantsHarvested = Array.from(state.harvestedPlants);
 
     game.weatherCondition = state.currentWeather[0] == 0 ? "sunny" : "rainy";
@@ -388,8 +412,8 @@ class Game {
     notifyChange("stateChanged");
   }
 
-  cloneGrid(): Cell[][] {
-    return this.grid.map((row) => row.map((cell) => ({ ...cell })));
+  cloneGrid(): ArrayBuffer {
+    return this.grid.slice(0);
   }
 
   //placing any update functions here
@@ -450,21 +474,15 @@ function getPlantIndex(plantName: string): number {
 //removes a plant from current cell
 function reapPlant(currentCell: Cell) {
   const confirmReap = window.confirm(
-    `Do you want to reap the ${
-      currentCell.plant!.name
-    } plant?\nDetails:\nSun Level: ${
-      currentCell.plant!.sunLevel
-    }, Water Level: ${currentCell.plant!.waterLevel}, Growth Level: ${
-      currentCell.plant!.growthLevel
-    }`
+    `Do you want to reap the ${currentCell.type} plant?\nDetails:\nSun Level: ${currentCell.sunLevel}, Water Level: ${currentCell.waterLevel}, Growth Level: ${currentCell.growthLevel}`
   );
 
   if (confirmReap) {
-    if (currentCell.plant!.plantType != "weed") {
+    if (currentCell.type != cellType.crabgrass) {
       // do not add weeds to inventory
-      farmer.plants.push(currentCell.plant!);
-      const reapedPlant = currentCell.plant!.name;
-      if (currentCell.plant!.growthLevel >= MAX_PLANT_GROWTH) {
+      farmer.plants.push(allPlants.get(currentCell.type)!);
+      const reapedPlant = getNameFromType(currentCell.type);
+      if (currentCell.growthLevel >= MAX_PLANT_GROWTH) {
         // player only collects plant if it was ready for harvest
         const plantIndex = getPlantIndex(reapedPlant);
         plantsHarvested[plantIndex] += 1;
@@ -472,11 +490,15 @@ function reapPlant(currentCell: Cell) {
       }
     }
     console.log(
-      `You reaped the ${currentCell.plant!.name} plant! in  cell (${
+      `You reaped the ${getNameFromType(currentCell.type)} plant! in  cell (${
         currentCell.rowIndex
       },${currentCell.colIndex})`
     );
-    currentCell.plant = null; // Remove plant from cell
+    currentCell.type = cellType.dirt; // Remove plant from cell
+    currentCell.sunLevel = 0;
+    currentCell.waterLevel = 0;
+    currentCell.growthLevel = 0;
+    game.storeCell(currentCell);
 
     notifyChange("stateChanged");
   }
@@ -484,28 +506,24 @@ function reapPlant(currentCell: Cell) {
 
 // interacts with cell
 function interact(cell: Cell) {
-  if (cell.plant != null) {
+  if (cell.type != cellType.dirt) {
     // if there is a plant here, reap it (Weeds and Flowers)
     reapPlant(cell);
     redoStack = []; //clear redo since action was performed
     states.push(getCurrentGameState(game));
     notifyChange("stateChanged");
-  } else if (cell.plant == null) {
+  } else if (cell.type == cellType.dirt) {
     //otherwise prompt player for action
     const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
     const selectedPlantType = plantManifest.find(
       (plantType) => plantType.name.toLowerCase() == plantName.toLowerCase()
     );
     if (selectedPlantType) {
-      cell.plant = new Plant(
-        selectedPlantType.name,
-        selectedPlantType.type,
-        selectedPlantType.sunRequisite,
-        selectedPlantType.waterRequisite,
-        selectedPlantType.color,
-        cell.rowIndex,
-        cell.rowIndex
-      );
+      cell.type = selectedPlantType.type;
+      cell.sunLevel = 0;
+      cell.waterLevel = 0;
+      cell.growthLevel = 0;
+      game.storeCell(cell);
       // Scenario Check (Remove in future)
       updateScenario(selectedPlantType.name);
 
@@ -553,21 +571,13 @@ function cloneGameState(state: GameState): GameState {
           plant.name,
           plant.plantType,
           plant.sunRequisite,
-          plant.waterRequisite,
-          plant.color,
-          plant.rowIndex,
-          plant.colIndex
+          plant.waterRequisite
         )
       : null;
   }
 
   // Clone grid of cells, including the Plant objects
-  const clonedGrid: Cell[][] = state.grid.map((row) =>
-    row.map((cell) => ({
-      ...cell,
-      plant: clonePlant(cell.plant),
-    }))
-  );
+  const clonedGrid: ArrayBuffer = state.grid.slice(0);
 
   const clonedCurrentWeather: number[] = [...state.currentWeather];
   const clonedHarvestedPlants: number[] = [...state.harvestedPlants];
@@ -623,7 +633,7 @@ function deleteLocalStorage() {
 function manualSave() {
   const input = prompt("Enter a name for your save file (optional) : ");
   if (input == null) return; //exit if no input
-  const saveName = (input == "")? `saved_${getCurrentDateTime()}`: input; //default name if input is empty
+  const saveName = input == "" ? `saved_${getCurrentDateTime()}` : input; //default name if input is empty
 
   savedGameStates.set(
     saveName,
@@ -675,6 +685,79 @@ function loadSavedGame() {
   }
 }
 
+function getColorFromType(type: number): string {
+  switch (type) {
+    case cellType.dirt: {
+      return "saddlebrown";
+    }
+    case cellType.crabgrass: {
+      return "green";
+    }
+    case cellType.sunflower: {
+      return "yellow";
+    }
+    case cellType.rose: {
+      return "pink";
+    }
+    case cellType.daffodil: {
+      return "#FFD700";
+    }
+    case cellType.lily: {
+      return "#FFFFFF";
+    }
+    case cellType.marigold: {
+      return "#FFA500";
+    }
+    case cellType.fuchsia: {
+      return "#FF00FF";
+    }
+  }
+  return "saddlebrown";
+}
+
+function getNameFromType(type: number): string {
+  switch (type) {
+    case cellType.dirt: {
+      return "dirt";
+    }
+    case cellType.crabgrass: {
+      return "crabgrass";
+    }
+    case cellType.sunflower: {
+      return "sunflower";
+    }
+    case cellType.rose: {
+      return "rose";
+    }
+    case cellType.daffodil: {
+      return "daffodil";
+    }
+    case cellType.lily: {
+      return "lily";
+    }
+    case cellType.marigold: {
+      return "marigold";
+    }
+    case cellType.fuchsia: {
+      return "fuchsia";
+    }
+  }
+  return "nothing";
+}
+
+function createAllPlants() {
+  for (const template of plantManifest) {
+    allPlants.set(
+      template.type,
+      new Plant(
+        template.name,
+        template.type,
+        template.sunRequisite,
+        template.waterRequisite
+      )
+    );
+  }
+}
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 //character movement and controls
@@ -683,13 +766,12 @@ document.addEventListener("keydown", (event) => {
     case "t": {
       redoStack = [];
       game.updateGame();
-      game.grid.forEach((row) => {
-        row.forEach((cell) => {
-          if (cell.plant instanceof Plant) {
-            cell.plant.simulateGrowth();
-          }
-        });
-      });
+
+      for (let i = 0; i < GAME_SIZE; i++) {
+        for (let j = 0; j < GAME_SIZE; j++) {
+          simulateGrowth(game.getCell(i, j));
+        }
+      }
 
       //add current game state
       states.push(getCurrentGameState(game));
@@ -748,11 +830,10 @@ document.addEventListener("stateChanged", () => {
   game.updateUI();
   game.draw(ctx!);
   localStorage.setItem("states", JSON.stringify(states));
-  
 });
 
 //store saved games before player exits
-window.addEventListener("beforeunload", ()=>{
+window.addEventListener("beforeunload", () => {
   localStorage.setItem(
     "savedGames",
     JSON.stringify(Array.from(savedGameStates.entries()))
@@ -761,6 +842,7 @@ window.addEventListener("beforeunload", ()=>{
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
 
+createAllPlants();
 let game = new Game(GAME_SIZE);
 let farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 drawGame();
