@@ -68,7 +68,7 @@ const plantManifest = [
   }, // Fuchsia
 ];
 
-const allPlants: Map<number, Plant> = new Map<number,Plant>();
+const allPlants: Map<number, Plant> = new Map<number, Plant>();
 
 const MAX_PLANT_GROWTH = 15;
 
@@ -221,6 +221,27 @@ class Game {
   //initializes game from localstorage is available, otherwise initializes new game
   constructor(gridSize: number) {
     this.size = gridSize;
+
+    //add saved games states if available
+    const storedData = localStorage.getItem("savedGames");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    if (storedData) {
+      const parsedData = JSON.parse(storedData) as [string, EncodedState[]][];
+      const decodedData: [string, GameState[]][]= parsedData.map(([saveName, encodedStates]) => {
+        return [
+          saveName,
+          encodedStates.map((encodedState) => {
+            return {
+              grid: base64ToArrayBuffer(encodedState.grid),
+              currentWeather: encodedState.currentWeather,
+              harvestedPlants: encodedState.harvestedPlants,
+            };
+          }),
+        ];
+      });
+      savedGameStates = new Map<string, GameState[]>(decodedData);
+    }
+
     // check to see if autosave state is available
     const localStore = localStorage.getItem("states");
     if (localStore) {
@@ -229,7 +250,7 @@ class Game {
         return {
           grid: base64ToArrayBuffer(encodedState.grid),
           currentWeather: encodedState.currentWeather,
-          harvestedPlants: encodedState.harvestedPlants
+          harvestedPlants: encodedState.harvestedPlants,
         };
       });
       this.grid = states[states.length - 1].grid;
@@ -251,14 +272,6 @@ class Game {
       const midIndex = Math.floor(this.size / 2);
       this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
       this.updateGame();
-    }
-
-    //add saved games states if available
-    const storedData = localStorage.getItem("savedGames");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    if (storedData) {
-      const parsedData = JSON.parse(storedData) as [string, GameState[]][];
-      savedGameStates = new Map<string, GameState[]>(parsedData);
     }
   }
 
@@ -444,7 +457,10 @@ function notifyChange(name: string) {
 // convert ArrayBuffer to Base64
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const uint8Array = new Uint8Array(buffer);
-  const binaryString = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), "");
+  const binaryString = uint8Array.reduce(
+    (acc, byte) => acc + String.fromCharCode(byte),
+    ""
+  );
   return btoa(binaryString);
 }
 
@@ -501,8 +517,16 @@ function reapPlant(currentCell: Cell) {
       if (currentCell.growthLevel >= MAX_PLANT_GROWTH) {
         // player only collects plant if it was ready for harvest
         farmer.plants.push(allPlants.get(currentCell.type)!);
-        plantsHarvested[currentCell.type-2] += 1;
-        console.log("HARVESTED ", reapedPlant, "! ", plantsHarvested[currentCell.type], " ", reapedPlant, "s in inventory");
+        plantsHarvested[currentCell.type - 2] += 1;
+        console.log(
+          "HARVESTED ",
+          reapedPlant,
+          "! ",
+          plantsHarvested[currentCell.type],
+          " ",
+          reapedPlant,
+          "s in inventory"
+        );
         game.updateUI();
       }
     }
@@ -581,7 +605,6 @@ function getCurrentGameState(game: Game): GameState {
 
 //returns a deep copy of a GameState
 function cloneGameState(state: GameState): GameState {
-
   // Clone grid of cells, including the Plant objects
   const clonedGrid: ArrayBuffer = state.grid.slice(0);
 
@@ -645,11 +668,21 @@ function manualSave() {
   );
   alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
 
+  const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<string, EncodedState[]>();
+  savedGameStates.forEach((gameStates, key)=>{
+    const encodedGameStates: EncodedState[] = gameStates.map((gameState)=>{
+      return {
+        grid: arrayBufferToBase64(gameState.grid),
+        currentWeather: gameState.currentWeather,
+        harvestedPlants: gameState.harvestedPlants,
+      };
+    }) as EncodedState[];
+    encodedSavedGameStates.set(key, encodedGameStates);
+  });
   localStorage.setItem(
     "savedGames",
-    JSON.stringify(Array.from(savedGameStates.entries()))
+    JSON.stringify(Array.from(encodedSavedGameStates.entries()))
   );
-
 }
 
 //prompts the user to enter the save state which they want to load
@@ -677,9 +710,10 @@ function loadSavedGame() {
         states = savedGameStates
           .get(selectedName)!
           .map((state) => cloneGameState(state));
-        
+
         game.applyGameState(cloneGameState(states[states.length - 1]));
         redoStack = [];
+        notifyChange("stateChanged");
       }
     }
   }
@@ -830,7 +864,7 @@ document.addEventListener("stateChanged", () => {
     return {
       grid: arrayBufferToBase64(gameState.grid),
       currentWeather: gameState.currentWeather,
-      harvestedPlants: gameState.harvestedPlants
+      harvestedPlants: gameState.harvestedPlants,
     };
   });
   localStorage.setItem("states", JSON.stringify(encodedStates));
