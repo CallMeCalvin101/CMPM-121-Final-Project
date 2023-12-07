@@ -1,6 +1,20 @@
 {
   "allPlantTypes": [
     {
+      "name": "Dirt",
+      "type": 0,
+      "sunRequisite": 0,
+      "waterRequisite": 0,
+      "color": "saddlebrown"
+    },
+    {
+      "name": "Crabgrass",
+      "type": 1,
+      "sunRequisite": 0,
+      "waterRequisite": 0,
+      "color": "green"
+    },
+    {
       "name": "Sunflower",
       "type": 2,
       "sunRequisite": 3,

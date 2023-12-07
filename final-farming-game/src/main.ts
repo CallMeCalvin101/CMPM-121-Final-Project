@@ -289,7 +289,7 @@ class Game {
         const y = i * CELL_SIZE;
         const cell = this.getCell(i, j);
 
-        ctx.fillStyle = getColorFromType(cell.type);
+        ctx.fillStyle = allPlants.get(cell.type)!.color;
         ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
       }
     }
@@ -665,36 +665,6 @@ function loadSavedGame() {
   }
 }
 
-function getColorFromType(type: number): string {
-  switch (type) {
-    case cellType.dirt: {
-      return "saddlebrown";
-    }
-    case cellType.crabgrass: {
-      return "green";
-    }
-    case cellType.sunflower: {
-      return "yellow";
-    }
-    case cellType.rose: {
-      return "pink";
-    }
-    case cellType.daffodil: {
-      return "#FFD700";
-    }
-    case cellType.lily: {
-      return "#FFFFFF";
-    }
-    case cellType.marigold: {
-      return "#FFA500";
-    }
-    case cellType.fuchsia: {
-      return "#FF00FF";
-    }
-  }
-  return "saddlebrown";
-}
-
 function getNameFromType(type: number): string {
   switch (type) {
     case cellType.dirt: {
@@ -733,10 +703,11 @@ function definePlantTypesFromJSON() {
 
 function getAllFlowerTypes(): string[] {
   const flowers: string[] = [];
+  const offset = 2;
   allPlants.forEach((plant) => {
     flowers.push(plant.name);
   });
-  return flowers;
+  return flowers.slice(offset);
 }
 
 function getTypefromName(name: string): number {
@@ -746,66 +717,42 @@ function getTypefromName(name: string): number {
     getAllFlowerTypes().findIndex((e) => e == uppercasedStrings) + indexOffset
   );
 }
+
+function passTime() {
+  redoStack = [];
+  game.updateGame();
+
+  for (let i = 0; i < GAME_SIZE; i++) {
+    for (let j = 0; j < GAME_SIZE; j++) {
+      simulateGrowth(game.getCell(i, j));
+    }
+  }
+
+  notifyChange("stateChanged");
+}
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 //character movement and controls
+const keyHandlers: Record<string, () => void> = {
+  ArrowLeft: () => farmer.dragPos("W", CELL_SIZE),
+  ArrowRight: () => farmer.dragPos("E", CELL_SIZE),
+  ArrowUp: () => farmer.dragPos("N", CELL_SIZE),
+  ArrowDown: () => farmer.dragPos("S", CELL_SIZE),
+  " ": () => interact(farmer.getCurrentCell()!),
+  u: () => undo(),
+  r: () => redo(),
+  d: () => deleteLocalStorage(),
+  s: () => manualSave(),
+  l: () => loadSavedGame(),
+  t: () => passTime(),
+};
+
 document.addEventListener("keydown", (event) => {
-  switch (event.key) {
-    case "t": {
-      redoStack = [];
-      game.updateGame();
-
-      for (let i = 0; i < GAME_SIZE; i++) {
-        for (let j = 0; j < GAME_SIZE; j++) {
-          simulateGrowth(game.getCell(i, j));
-        }
-      }
-
-      notifyChange("stateChanged");
-
-      break;
-    }
-    case "ArrowLeft":
-      farmer.dragPos("W", CELL_SIZE);
-      break;
-
-    case "ArrowRight":
-      farmer.dragPos("E", CELL_SIZE);
-      break;
-
-    case "ArrowUp":
-      farmer.dragPos("N", CELL_SIZE);
-      break;
-
-    case "ArrowDown":
-      farmer.dragPos("S", CELL_SIZE);
-      break;
-    //interact with current cell
-    case " ": {
-      interact(farmer.getCurrentCell()!);
-      break;
-    }
-    //undo
-    case "u":
-      undo();
-      break;
-    //redo
-    case "r":
-      redo();
-      break;
-    //delete auto-save state and start game over
-    case "d":
-      deleteLocalStorage();
-      break;
-    //manually save game state
-    case "s":
-      manualSave();
-      break;
-    //load saved game
-    case "l":
-      loadSavedGame();
-      break;
+  const specialHandler = keyHandlers[event.key];
+  if(specialHandler !== null) {
+    specialHandler();
   }
+
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
   drawGame();
 });
