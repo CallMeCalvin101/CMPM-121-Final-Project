@@ -1,5 +1,6 @@
 import "./style.css";
 import { Scenario } from "./scenario.ts";
+import jsonPlants from "./plants.json";
 
 //------------------------------------ Global Vars ------------------------------------------------------------------------------------
 
@@ -22,57 +23,12 @@ const cellType = Object.freeze({
   fuchsia: 7,
 });
 
-//Eventually this structure should be specified by a JSON object, map will work for now
-const plantManifest = [
-  {
-    name: "Sunflower",
-    type: cellType.sunflower,
-    sunRequisite: 3,
-    waterRequisite: 2,
-    color: "yellow",
-  },
-  {
-    name: "Rose",
-    type: cellType.rose,
-    sunRequisite: 2,
-    waterRequisite: 3,
-    color: "pink",
-  },
-  {
-    name: "Daffodil",
-    type: cellType.daffodil,
-    sunRequisite: 3,
-    waterRequisite: 2,
-    color: "#FFD700",
-  }, // Gold
-  {
-    name: "Lily",
-    type: cellType.lily,
-    sunRequisite: 2,
-    waterRequisite: 3,
-    color: "#FFFFFF",
-  }, // White
-  {
-    name: "Marigold",
-    type: cellType.marigold,
-    sunRequisite: 4,
-    waterRequisite: 2,
-    color: "#FFA500",
-  }, // Orange
-  {
-    name: "Fuchsia",
-    type: cellType.fuchsia,
-    sunRequisite: 3,
-    waterRequisite: 3,
-    color: "#FF00FF",
-  }, // Fuchsia
-];
-
 const allPlants: Map<number, Plant> = new Map<number, Plant>();
+definePlantTypesFromJSON();
 
 const MAX_PLANT_GROWTH = 15;
 
-let plantsHarvested: number[] = plantManifest.map(() => 0);
+let plantsHarvested: number[] = getAllFlowerTypes().map(() => 0);
 
 let states: GameState[] = []; //history of game states
 let redoStack: GameState[] = [];
@@ -95,13 +51,13 @@ const CELL_BYTES = 6;
 interface GameState {
   grid: ArrayBuffer;
   currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
-  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
+  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex
 }
 
 interface EncodedState {
   grid: string;
   currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
-  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex from plantManifest
+  harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex
 }
 
 class Character {
@@ -167,13 +123,11 @@ class Character {
   }
 }
 
-class Plant {
-  constructor(
-    readonly name: string,
-    readonly plantType: number,
-    readonly sunRequisite: number,
-    readonly waterRequisite: number
-  ) {}
+interface Plant {
+  name: string;
+  sunRequisite: number;
+  waterRequisite: number;
+  color: string;
 }
 
 function simulateGrowth(cell: Cell) {
@@ -222,23 +176,26 @@ class Game {
   constructor(gridSize: number) {
     this.size = gridSize;
 
+    /*
     //add saved games states if available
     const storedData = localStorage.getItem("savedGames");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     if (storedData) {
       const parsedData = JSON.parse(storedData) as [string, EncodedState[]][];
-      const decodedData: [string, GameState[]][]= parsedData.map(([saveName, encodedStates]) => {
-        return [
-          saveName,
-          encodedStates.map((encodedState) => {
-            return {
-              grid: base64ToArrayBuffer(encodedState.grid),
-              currentWeather: encodedState.currentWeather,
-              harvestedPlants: encodedState.harvestedPlants,
-            };
-          }),
-        ];
-      });
+      const decodedData: [string, GameState[]][] = parsedData.map(
+        ([saveName, encodedStates]) => {
+          return [
+            saveName,
+            encodedStates.map((encodedState) => {
+              return {
+                grid: base64ToArrayBuffer(encodedState.grid),
+                currentWeather: encodedState.currentWeather,
+                harvestedPlants: encodedState.harvestedPlants,
+              };
+            }),
+          ];
+        }
+      );
       savedGameStates = new Map<string, GameState[]>(decodedData);
     }
 
@@ -261,18 +218,18 @@ class Game {
       const midIndex = Math.floor(this.size / 2);
       this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
       this.updateUI();
-    } else {
-      const totalGridSize = gridSize * gridSize;
-      this.grid = new ArrayBuffer(totalGridSize * CELL_BYTES);
+    } else {*/
+    const totalGridSize = gridSize * gridSize;
+    this.grid = new ArrayBuffer(totalGridSize * CELL_BYTES);
 
-      this.weatherCondition = "sunny";
-      this.weatherDegree = 3;
-      this.generateRandomGrid();
+    this.weatherCondition = "sunny";
+    this.weatherDegree = 3;
+    this.generateRandomGrid();
 
-      const midIndex = Math.floor(this.size / 2);
-      this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
-      this.updateGame();
-    }
+    const midIndex = Math.floor(this.size / 2);
+    this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
+    this.updateGame();
+    //}
   }
 
   storeCell(cell: Cell) {
@@ -355,15 +312,15 @@ class Game {
   updateUI() {
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
-    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${plantManifest
-      .map((plantType) => plantType.name)
-      .join(", ")}`;
+    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${getAllFlowerTypes().join(
+      `, `
+    )}`;
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
     harvestedPlants!.innerHTML = `<strong>Harvested Plants:</strong> ${Array.from(
-      plantManifest.map((plantType, index) =>
-        [plantType.name, plantsHarvested[index]].join(": ")
+      getAllFlowerTypes().map((plantType, index) =>
+        [plantType, plantsHarvested[index]].join(": ")
       )
     ).join(", ")}`;
 
@@ -405,15 +362,6 @@ class Game {
         this.storeCell(cell);
       }
     }
-
-    /* Old Formulas used to calculate sun weather during rainfall
-      NOTE: cell does not have plant object
-      cell.plant.waterLevel += this.weatherDegree; // on a rainy day - 20% chance of getting full sun power, 80% chance getting half sun power
-      cell.plant.sunLevel =
-      cell.plant && Math.random() < sunChance
-        ? Math.floor(this.weatherDegree / 2)
-        : this.weatherDegree; 
-      */
   }
 
   updateCurrentCellUI(cell: Cell) {
@@ -497,9 +445,7 @@ function drawGame() {
 }
 
 function promptPlantSelection(): string {
-  const plantNames = plantManifest
-    .map((plantType) => plantType.name)
-    .join(", ");
+  const plantNames = getAllFlowerTypes().join(", ");
   const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
@@ -555,18 +501,13 @@ function interact(cell: Cell) {
     notifyChange("stateChanged");
   } else if (cell.type == cellType.dirt) {
     //otherwise prompt player for action
-    const plantName = promptPlantSelection().toLowerCase(); // this type is here to avoid type erros actual type is any key in plantManifest
-    const selectedPlantType = plantManifest.find(
-      (plantType) => plantType.name.toLowerCase() == plantName.toLowerCase()
-    );
-    if (selectedPlantType) {
-      cell.type = selectedPlantType.type;
+    const inputtedPlant = promptPlantSelection().toLowerCase();
+    if (getTypefromName(inputtedPlant)) {
+      cell.type = getTypefromName(inputtedPlant);
       cell.sunLevel = 0;
       cell.waterLevel = 0;
       cell.growthLevel = 0;
       game.storeCell(cell);
-      // Scenario Check (Remove in future)
-      updateScenario(selectedPlantType.name);
 
       redoStack = [];
       states.push(getCurrentGameState(game));
@@ -670,9 +611,12 @@ function manualSave() {
   );
   alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
 
-  const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<string, EncodedState[]>();
-  savedGameStates.forEach((gameStates, key)=>{
-    const encodedGameStates: EncodedState[] = gameStates.map((gameState)=>{
+  const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<
+    string,
+    EncodedState[]
+  >();
+  savedGameStates.forEach((gameStates, key) => {
+    const encodedGameStates: EncodedState[] = gameStates.map((gameState) => {
       return {
         grid: arrayBufferToBase64(gameState.grid),
         currentWeather: gameState.currentWeather,
@@ -781,18 +725,26 @@ function getNameFromType(type: number): string {
   return "nothing";
 }
 
-function createAllPlants() {
-  for (const template of plantManifest) {
-    allPlants.set(
-      template.type,
-      new Plant(
-        template.name,
-        template.type,
-        template.sunRequisite,
-        template.waterRequisite
-      )
-    );
-  }
+function definePlantTypesFromJSON() {
+  jsonPlants.allPlantTypes.forEach((plant) => {
+    allPlants.set(plant.type, plant);
+  });
+}
+
+function getAllFlowerTypes(): string[] {
+  const flowers: string[] = [];
+  allPlants.forEach((plant) => {
+    flowers.push(plant.name);
+  });
+  return flowers;
+}
+
+function getTypefromName(name: string): number {
+  const indexOffset = 2;
+  const uppercasedStrings = name.slice(0, 1).toUpperCase() + name.slice(1);
+  return (
+    getAllFlowerTypes().findIndex((e) => e == uppercasedStrings) + indexOffset
+  );
 }
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
@@ -874,9 +826,12 @@ document.addEventListener("stateChanged", () => {
 
 //store saved games before player exits
 window.addEventListener("beforeunload", () => {
-  const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<string, EncodedState[]>();
-  savedGameStates.forEach((gameStates, key)=>{
-    const encodedGameStates: EncodedState[] = gameStates.map((gameState)=>{
+  const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<
+    string,
+    EncodedState[]
+  >();
+  savedGameStates.forEach((gameStates, key) => {
+    const encodedGameStates: EncodedState[] = gameStates.map((gameState) => {
       return {
         grid: arrayBufferToBase64(gameState.grid),
         currentWeather: gameState.currentWeather,
@@ -892,27 +847,6 @@ window.addEventListener("beforeunload", () => {
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
-
-createAllPlants();
 let game = new Game(GAME_SIZE);
 let farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 drawGame();
-
-/*
-function runScenarioTest() {
-  const testCondition = "thisistest";
-  const testLoops = 3;
-  const testScenario = new Scenario(testCondition, testLoops);
-  for (let i = 0; i < testLoops; i++) {
-    if (testScenario.checkCondition(testCondition)) {
-      testScenario.increaseVal(1);
-    }
-  }
-
-  if (testScenario.checkTargetMet()) {
-    console.log("Scenario Class Test Passed");
-  }
-}
-
-runScenarioTest();
-*/

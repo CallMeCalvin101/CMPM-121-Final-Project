@@ -1,0 +1,46 @@
+{
+  "allPlantTypes": [
+    {
+      "name": "Sunflower",
+      "type": 2,
+      "sunRequisite": 3,
+      "waterRequisite": 2,
+      "color": "yellow"
+    },
+    {
+      "name": "Rose",
+      "type": 3,
+      "sunRequisite": 2,
+      "waterRequisite": 3,
+      "color": "pink"
+    },
+    {
+      "name": "Daffodil",
+      "type": 4,
+      "sunRequisite": 3,
+      "waterRequisite": 2,
+      "color": "#FFD700"
+    },
+    {
+      "name": "Lily",
+      "type": 5,
+      "sunRequisite": 2,
+      "waterRequisite": 3,
+      "color": "#FFFFFF"
+    },
+    {
+      "name": "Marigold",
+      "type": 6,
+      "sunRequisite": 4,
+      "waterRequisite": 2,
+      "color": "#FFA500"
+    },
+    {
+      "name": "Fuchsia",
+      "type": 7,
+      "sunRequisite": 3,
+      "waterRequisite": 3,
+      "color": "#FF00FF"
+    }
+  ]
+}
