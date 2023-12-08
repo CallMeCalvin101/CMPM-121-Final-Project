@@ -1,0 +1,34 @@
+# Scenario: Challenging Garden (YAML)
+
+# Starting Conditions
+starting_conditions:
+  player_position:
+    x: 3
+    y: 3
+  initial_resources:
+    seeds: 8
+    water: 8
+
+# Weather Randomization Policy
+weather_policy:
+  conditions:
+    - sunny
+    - rainy
+    - snowy
+  severity_range: [1, 5]
+
+# Unique Events Scheduled at Specific Times
+events_schedule:
+  - time: 2
+    event: "RandomGrassGrowth"
+    target_cell:
+      row: 4
+      col: 2
+    destruction_radius: 1
+
+# Victory Conditions
+victory_conditions:
+  harvest_goal:
+    rose: 3
+    lilies: 3
+    sunflowers: 3
