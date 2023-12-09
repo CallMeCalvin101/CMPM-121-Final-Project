@@ -10,7 +10,7 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
-const savedGameStates = new Map<string, GameState[]>();
+let savedGameStates = new Map<string, GameState[]>();
 
 const cellType = Object.freeze({
   dirt: 0,
@@ -765,7 +765,7 @@ window.addEventListener("beforeunload", () => {
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
-/*
+
 //add saved games states if available
 const storedData = localStorage.getItem("savedGames");
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -788,7 +788,6 @@ if (storedData) {
   savedGameStates = new Map<string, GameState[]>(decodedData);
 }
 
-*/
 // check to see if autosave state is available
 const autosave = localStorage.getItem("states");
 let states: GameState[];
