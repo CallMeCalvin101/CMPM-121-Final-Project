@@ -176,7 +176,6 @@ class Game {
     gridSize: number,
     grid?: ArrayBuffer,
     states?: GameState[],
-    redoStack?: GameState[],
     weatherCondition?: string,
     weatherDegree?: number
   ) {
@@ -185,7 +184,7 @@ class Game {
     this.weatherCondition = weatherCondition ? weatherCondition : "sunny";
     this.weatherDegree = weatherDegree ? weatherDegree : 3;
     this.states = states ? states : [];
-    this.redoStack = redoStack ? redoStack : [];
+    this.redoStack = [];
     if (!grid) this.generateRandomGrid();
 
     const midIndex = Math.floor(this.size / 2);
@@ -766,51 +765,53 @@ window.addEventListener("beforeunload", () => {
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
-
 /*
-    //add saved games states if available
-    const storedData = localStorage.getItem("savedGames");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    if (storedData) {
-      const parsedData = JSON.parse(storedData) as [string, EncodedState[]][];
-      const decodedData: [string, GameState[]][] = parsedData.map(
-        ([saveName, encodedStates]) => {
-          return [
-            saveName,
-            encodedStates.map((encodedState) => {
-              return {
-                grid: base64ToArrayBuffer(encodedState.grid),
-                currentWeather: encodedState.currentWeather,
-                harvestedPlants: encodedState.harvestedPlants,
-              };
-            }),
-          ];
-        }
-      );
-      savedGameStates = new Map<string, GameState[]>(decodedData);
+//add saved games states if available
+const storedData = localStorage.getItem("savedGames");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+if (storedData) {
+  const parsedData = JSON.parse(storedData) as [string, EncodedState[]][];
+  const decodedData: [string, GameState[]][] = parsedData.map(
+    ([saveName, encodedStates]) => {
+      return [
+        saveName,
+        encodedStates.map((encodedState) => {
+          return {
+            grid: base64ToArrayBuffer(encodedState.grid),
+            currentWeather: encodedState.currentWeather,
+            harvestedPlants: encodedState.harvestedPlants,
+          };
+        }),
+      ];
     }
+  );
+  savedGameStates = new Map<string, GameState[]>(decodedData);
+}
 
-    // check to see if autosave state is available
-    const localStore = localStorage.getItem("states");
-    if (localStore) {
-      const encodedStates = JSON.parse(localStore) as EncodedState[];
-      states = encodedStates.map((encodedState) => {
-        return {
-          grid: base64ToArrayBuffer(encodedState.grid),
-          currentWeather: encodedState.currentWeather,
-          harvestedPlants: encodedState.harvestedPlants,
-        };
-      });
-      this.grid = states[states.length - 1].grid;
-      this.weatherCondition =
-        states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
-      this.weatherDegree = states[states.length - 1].currentWeather[1];
+*/
+// check to see if autosave state is available
+const autosave = localStorage.getItem("states");
+let states: GameState[];
+let game: Game;
 
-      const midIndex = Math.floor(this.size / 2);
-      this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
-      this.updateUI();
-    } else {*/
+if (autosave) {
+  const encodedStates = JSON.parse(autosave) as EncodedState[];
+  states = encodedStates.map((encodedState) => {
+    return {
+      grid: base64ToArrayBuffer(encodedState.grid),
+      currentWeather: encodedState.currentWeather,
+      harvestedPlants: encodedState.harvestedPlants,
+    };
+  });
+  const grid = states[states.length - 1].grid;
+  const weatherCondition =
+    states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
+  const weatherDegree = states[states.length - 1].currentWeather[1];
 
-let game = new Game(GAME_SIZE); //not including optional params creates a fresh game
+  game = new Game(GAME_SIZE, grid, states, weatherCondition, weatherDegree);
+} else {
+  game = new Game(GAME_SIZE); //not including optional params creates a fresh game
+}
+
 let farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 drawGame();
