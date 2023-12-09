@@ -10,7 +10,7 @@ const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario("Sunflower", 3);
-let savedGameStates = new Map<string, GameState[]>();
+const savedGameStates = new Map<string, GameState[]>();
 
 const cellType = Object.freeze({
   dirt: 0,
@@ -29,9 +29,6 @@ definePlantTypesFromJSON();
 const MAX_PLANT_GROWTH = 15;
 
 let plantsHarvested: number[] = getAllFlowerTypes().map(() => 0);
-
-let states: GameState[] = []; //history of game states
-let redoStack: GameState[] = [];
 
 const GAME_SIZE = 7;
 const CELL_SIZE = gameWidth / GAME_SIZE;
@@ -171,60 +168,25 @@ class Game {
   grid: ArrayBuffer;
   weatherCondition: string; // 'sunny' or 'rainy'
   weatherDegree: number; //magnitude of sun or rain
+  states: GameState[]; //array of previous game states
+  redoStack: GameState[];
 
   //initializes game from localstorage is available, otherwise initializes new game
-  constructor(gridSize: number) {
+  constructor(
+    gridSize: number,
+    grid?: ArrayBuffer,
+    states?: GameState[],
+    redoStack?: GameState[],
+    weatherCondition?: string,
+    weatherDegree?: number
+  ) {
     this.size = gridSize;
-
-    /*
-    //add saved games states if available
-    const storedData = localStorage.getItem("savedGames");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    if (storedData) {
-      const parsedData = JSON.parse(storedData) as [string, EncodedState[]][];
-      const decodedData: [string, GameState[]][] = parsedData.map(
-        ([saveName, encodedStates]) => {
-          return [
-            saveName,
-            encodedStates.map((encodedState) => {
-              return {
-                grid: base64ToArrayBuffer(encodedState.grid),
-                currentWeather: encodedState.currentWeather,
-                harvestedPlants: encodedState.harvestedPlants,
-              };
-            }),
-          ];
-        }
-      );
-      savedGameStates = new Map<string, GameState[]>(decodedData);
-    }
-
-    // check to see if autosave state is available
-    const localStore = localStorage.getItem("states");
-    if (localStore) {
-      const encodedStates = JSON.parse(localStore) as EncodedState[];
-      states = encodedStates.map((encodedState) => {
-        return {
-          grid: base64ToArrayBuffer(encodedState.grid),
-          currentWeather: encodedState.currentWeather,
-          harvestedPlants: encodedState.harvestedPlants,
-        };
-      });
-      this.grid = states[states.length - 1].grid;
-      this.weatherCondition =
-        states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
-      this.weatherDegree = states[states.length - 1].currentWeather[1];
-
-      const midIndex = Math.floor(this.size / 2);
-      this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
-      this.updateUI();
-    } else {*/
-    const totalGridSize = gridSize * gridSize;
-    this.grid = new ArrayBuffer(totalGridSize * CELL_BYTES);
-
-    this.weatherCondition = "sunny";
-    this.weatherDegree = 3;
-    this.generateRandomGrid();
+    this.grid = grid ? grid : new ArrayBuffer(gridSize * gridSize * CELL_BYTES);
+    this.weatherCondition = weatherCondition ? weatherCondition : "sunny";
+    this.weatherDegree = weatherDegree ? weatherDegree : 3;
+    this.states = states ? states : [];
+    this.redoStack = redoStack ? redoStack : [];
+    if (!grid) this.generateRandomGrid();
 
     const midIndex = Math.floor(this.size / 2);
     this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
@@ -279,7 +241,7 @@ class Game {
         this.storeCell(newCell);
       }
     }
-    states.push(getCurrentGameState(this));
+    this.states.push(this.getCurrentGameState());
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -291,6 +253,216 @@ class Game {
 
         ctx.fillStyle = allPlants.get(cell.type)!.color;
         ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+      }
+    }
+  }
+
+  undo() {
+    if (this.states.length > 1) {
+      const currentState = this.states.pop();
+      this.redoStack.push(this.cloneGameState(currentState!));
+      game.applyGameState(
+        this.cloneGameState(this.states[this.states.length - 1])
+      );
+    } else {
+      console.log("Undo not available.");
+    }
+  }
+
+  redo() {
+    if (this.redoStack.length > 0) {
+      const popped = this.cloneGameState(this.redoStack.pop()!);
+      this.states.push(popped);
+      this.applyGameState(popped);
+    } else {
+      console.log("Redo not available.");
+    }
+  }
+
+  // interacts with cell
+  interact(cell: Cell) {
+    if (cell.type != cellType.dirt) {
+      // if there is a plant here, reap it (Weeds and Flowers)
+      this.reapPlant(cell);
+      this.redoStack = []; //clear redo since action was performed
+      this.states.push(this.getCurrentGameState());
+      notifyChange("stateChanged");
+    } else if (cell.type == cellType.dirt) {
+      //otherwise prompt player for action
+      const inputtedPlant = promptPlantSelection().toLowerCase();
+      if (getTypefromName(inputtedPlant) > 1) {
+        //don't do this for dirt or crabgrass
+        cell.type = getTypefromName(inputtedPlant);
+        cell.sunLevel = 0;
+        cell.waterLevel = 0;
+        cell.growthLevel = 0;
+        this.storeCell(cell);
+
+        this.redoStack = [];
+        this.states.push(this.getCurrentGameState());
+        notifyChange("stateChanged");
+      } else {
+        console.log("Invalid plant selection.");
+      }
+    } else {
+      alert("No plants available!");
+    }
+  }
+
+  //removes a plant from current cell
+  reapPlant(currentCell: Cell) {
+    const confirmReap = window.confirm(
+      `Do you want to reap the ${currentCell.type} plant?\nDetails:\nSun Level: ${currentCell.sunLevel}, Water Level: ${currentCell.waterLevel}, Growth Level: ${currentCell.growthLevel}`
+    );
+
+    if (!confirmReap) return;
+
+    if (currentCell.type != cellType.crabgrass) {
+      // do not add weeds to inventory
+      const reapedPlant = getNameFromType(currentCell.type);
+      if (currentCell.growthLevel >= MAX_PLANT_GROWTH) {
+        // player only collects plant if it was ready for harvest
+        farmer.plants.push(allPlants.get(currentCell.type)!);
+        plantsHarvested[currentCell.type - 2] += 1;
+        console.log(
+          "HARVESTED ",
+          reapedPlant,
+          "! ",
+          plantsHarvested[currentCell.type],
+          " ",
+          reapedPlant,
+          "s in inventory"
+        );
+        this.updateUI();
+      }
+    }
+    console.log(
+      `You reaped the ${getNameFromType(currentCell.type)} plant! in  cell (${
+        currentCell.rowIndex
+      },${currentCell.colIndex})`
+    );
+    currentCell.type = cellType.dirt; // Remove plant from cell
+    currentCell.sunLevel = 0;
+    currentCell.waterLevel = 0;
+    currentCell.growthLevel = 0;
+    game.storeCell(currentCell);
+
+    notifyChange("stateChanged");
+  }
+
+  //returns a deep copy of a game state object representing the current game state
+  getCurrentGameState(): GameState {
+    const currentState: GameState = {
+      grid: this.cloneGrid(),
+      currentWeather: Array.from([
+        this.weatherCondition == "sunny" ? 0 : 1,
+        this.weatherDegree,
+      ]),
+      harvestedPlants: Array.from(plantsHarvested.values()),
+    };
+
+    return this.cloneGameState(currentState);
+  }
+
+  //returns a deep copy of a GameState
+  cloneGameState(state: GameState): GameState {
+    // Clone grid of cells, including the Plant objects
+    const clonedGrid: ArrayBuffer = state.grid.slice(0);
+
+    const clonedCurrentWeather: number[] = [...state.currentWeather];
+    const clonedHarvestedPlants: number[] = [...state.harvestedPlants];
+
+    const clonedState: GameState = {
+      grid: clonedGrid,
+      currentWeather: clonedCurrentWeather,
+      harvestedPlants: clonedHarvestedPlants,
+    };
+
+    return clonedState;
+  }
+
+  // delete local storage game data and start game over
+  deleteLocalStorage() {
+    if (
+      confirm("Are you sure you want to delete all game data and start over?")
+    ) {
+      localStorage.removeItem("states");
+      localStorage.removeItem("savedGames");
+      this.states = [];
+      this.redoStack = [];
+      savedGameStates.clear();
+      game = new Game(GAME_SIZE);
+      farmer = new Character(gameWidth / 2, gameHeight / 2, []);
+
+      drawGame();
+      this.updateGame();
+    }
+  }
+
+  // save current game state to list of saved game states + store saved game states in localstorage
+  manualSave() {
+    const input = prompt("Enter a name for your save file (optional) : ");
+    if (input == null) return; //exit if no input
+    const saveName = input == "" ? `saved_${getCurrentDateTime()}` : input; //default name if input is empty
+
+    savedGameStates.set(
+      saveName,
+      this.states.map((state) => this.cloneGameState(state))
+    );
+    alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
+
+    const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<
+      string,
+      EncodedState[]
+    >();
+    savedGameStates.forEach((gameStates, key) => {
+      const encodedGameStates: EncodedState[] = gameStates.map((gameState) => {
+        return {
+          grid: arrayBufferToBase64(gameState.grid),
+          currentWeather: gameState.currentWeather,
+          harvestedPlants: gameState.harvestedPlants,
+        };
+      }) as EncodedState[];
+      encodedSavedGameStates.set(key, encodedGameStates);
+    });
+    localStorage.setItem(
+      "savedGames",
+      JSON.stringify(Array.from(encodedSavedGameStates.entries()))
+    );
+  }
+
+  //prompts the user to enter the save state which they want to load
+  loadSavedGame() {
+    let promptText = `Please enter the number next to the save state you want to load.`;
+    const stateArray = Array.from(savedGameStates.entries());
+
+    let index = 1;
+    for (const state of stateArray) {
+      promptText += `\n${index}: ${state[0]}`;
+      index++;
+    }
+    const input = prompt(promptText);
+    if (input !== null) {
+      const selectedInteger = parseInt(input, 10); //convert the input to an integer
+      // if a valid integer, use it to apply chosen Game state
+      if (
+        !isNaN(selectedInteger) &&
+        selectedInteger >= 1 &&
+        selectedInteger <= stateArray.length
+      ) {
+        const selectedName = stateArray[selectedInteger - 1][0];
+
+        if (savedGameStates.has(selectedName)) {
+          this.states = savedGameStates
+            .get(selectedName)!
+            .map((state) => this.cloneGameState(state));
+
+          this.applyGameState(
+            this.cloneGameState(this.states[this.states.length - 1])
+          );
+          this.redoStack = [];
+          notifyChange("stateChanged");
+        }
       }
     }
   }
@@ -387,6 +559,19 @@ class Game {
     return this.grid.slice(0);
   }
 
+  passTime() {
+    this.redoStack = [];
+    this.updateGame();
+
+    for (let i = 0; i < GAME_SIZE; i++) {
+      for (let j = 0; j < GAME_SIZE; j++) {
+        simulateGrowth(game.getCell(i, j));
+      }
+    }
+
+    notifyChange("stateChanged");
+  }
+
   //placing any update functions here
   updateGame() {
     this.updateWeather();
@@ -450,76 +635,6 @@ function promptPlantSelection(): string {
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
 
-//removes a plant from current cell
-function reapPlant(currentCell: Cell) {
-  const confirmReap = window.confirm(
-    `Do you want to reap the ${currentCell.type} plant?\nDetails:\nSun Level: ${currentCell.sunLevel}, Water Level: ${currentCell.waterLevel}, Growth Level: ${currentCell.growthLevel}`
-  );
-
-  if (confirmReap) {
-    if (currentCell.type != cellType.crabgrass) {
-      // do not add weeds to inventory
-      const reapedPlant = getNameFromType(currentCell.type);
-      if (currentCell.growthLevel >= MAX_PLANT_GROWTH) {
-        // player only collects plant if it was ready for harvest
-        farmer.plants.push(allPlants.get(currentCell.type)!);
-        plantsHarvested[currentCell.type - 2] += 1;
-        console.log(
-          "HARVESTED ",
-          reapedPlant,
-          "! ",
-          plantsHarvested[currentCell.type],
-          " ",
-          reapedPlant,
-          "s in inventory"
-        );
-        game.updateUI();
-      }
-    }
-    console.log(
-      `You reaped the ${getNameFromType(currentCell.type)} plant! in  cell (${
-        currentCell.rowIndex
-      },${currentCell.colIndex})`
-    );
-    currentCell.type = cellType.dirt; // Remove plant from cell
-    currentCell.sunLevel = 0;
-    currentCell.waterLevel = 0;
-    currentCell.growthLevel = 0;
-    game.storeCell(currentCell);
-
-    notifyChange("stateChanged");
-  }
-}
-
-// interacts with cell
-function interact(cell: Cell) {
-  if (cell.type != cellType.dirt) {
-    // if there is a plant here, reap it (Weeds and Flowers)
-    reapPlant(cell);
-    redoStack = []; //clear redo since action was performed
-    states.push(getCurrentGameState(game));
-    notifyChange("stateChanged");
-  } else if (cell.type == cellType.dirt) {
-    //otherwise prompt player for action
-    const inputtedPlant = promptPlantSelection().toLowerCase();
-    if (getTypefromName(inputtedPlant)) {
-      cell.type = getTypefromName(inputtedPlant);
-      cell.sunLevel = 0;
-      cell.waterLevel = 0;
-      cell.growthLevel = 0;
-      game.storeCell(cell);
-
-      redoStack = [];
-      states.push(getCurrentGameState(game));
-      notifyChange("stateChanged");
-    } else {
-      console.log("Invalid plant selection.");
-    }
-  } else {
-    alert("No plants available!");
-  }
-}
-
 function updateScenario(action: string) {
   if (testScenario.checkCondition(action)) {
     testScenario.increaseVal(1);
@@ -527,141 +642,6 @@ function updateScenario(action: string) {
 
   if (testScenario.checkTargetMet()) {
     console.log("SCENARIO COMPLETE!!!");
-  }
-}
-
-//returns a deep copy of a game state object representing the current game state
-function getCurrentGameState(game: Game): GameState {
-  const currentState: GameState = {
-    grid: game.cloneGrid(),
-    currentWeather: Array.from([
-      game.weatherCondition == "sunny" ? 0 : 1,
-      game.weatherDegree,
-    ]),
-    harvestedPlants: Array.from(plantsHarvested.values()),
-  };
-
-  return cloneGameState(currentState);
-}
-
-//returns a deep copy of a GameState
-function cloneGameState(state: GameState): GameState {
-  // Clone grid of cells, including the Plant objects
-  const clonedGrid: ArrayBuffer = state.grid.slice(0);
-
-  const clonedCurrentWeather: number[] = [...state.currentWeather];
-  const clonedHarvestedPlants: number[] = [...state.harvestedPlants];
-
-  const clonedState: GameState = {
-    grid: clonedGrid,
-    currentWeather: clonedCurrentWeather,
-    harvestedPlants: clonedHarvestedPlants,
-  };
-
-  return clonedState;
-}
-
-function undo() {
-  if (states.length > 1) {
-    const currentState = states.pop();
-    redoStack.push(cloneGameState(currentState!));
-    game.applyGameState(cloneGameState(states[states.length - 1]));
-  } else {
-    console.log("Undo not available.");
-  }
-}
-
-function redo() {
-  if (redoStack.length > 0) {
-    const popped = cloneGameState(redoStack.pop()!);
-    states.push(popped);
-    game.applyGameState(popped);
-  } else {
-    console.log("Redo not available.");
-  }
-}
-
-// delete local storage game data and start game over
-function deleteLocalStorage() {
-  if (
-    confirm("Are you sure you want to delete all game data and start over?")
-  ) {
-    localStorage.removeItem("states");
-    localStorage.removeItem("savedGames");
-    states = [];
-    redoStack = [];
-    savedGameStates.clear();
-    game = new Game(GAME_SIZE);
-    farmer = new Character(gameWidth / 2, gameHeight / 2, []);
-
-    drawGame();
-    game.updateGame();
-  }
-}
-
-// save current game state to list of saved game states + store saved game states in localstorage
-function manualSave() {
-  const input = prompt("Enter a name for your save file (optional) : ");
-  if (input == null) return; //exit if no input
-  const saveName = input == "" ? `saved_${getCurrentDateTime()}` : input; //default name if input is empty
-
-  savedGameStates.set(
-    saveName,
-    states.map((state) => cloneGameState(state))
-  );
-  alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
-
-  const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<
-    string,
-    EncodedState[]
-  >();
-  savedGameStates.forEach((gameStates, key) => {
-    const encodedGameStates: EncodedState[] = gameStates.map((gameState) => {
-      return {
-        grid: arrayBufferToBase64(gameState.grid),
-        currentWeather: gameState.currentWeather,
-        harvestedPlants: gameState.harvestedPlants,
-      };
-    }) as EncodedState[];
-    encodedSavedGameStates.set(key, encodedGameStates);
-  });
-  localStorage.setItem(
-    "savedGames",
-    JSON.stringify(Array.from(encodedSavedGameStates.entries()))
-  );
-}
-
-//prompts the user to enter the save state which they want to load
-function loadSavedGame() {
-  let promptText = `Please enter the number next to the save state you want to load.`;
-  const stateArray = Array.from(savedGameStates.entries());
-
-  let index = 1;
-  for (const state of stateArray) {
-    promptText += `\n${index}: ${state[0]}`;
-    index++;
-  }
-  const input = prompt(promptText);
-  if (input !== null) {
-    const selectedInteger = parseInt(input, 10); //convert the input to an integer
-    // if a valid integer, use it to apply chosen Game state
-    if (
-      !isNaN(selectedInteger) &&
-      selectedInteger >= 1 &&
-      selectedInteger <= stateArray.length
-    ) {
-      const selectedName = stateArray[selectedInteger - 1][0];
-
-      if (savedGameStates.has(selectedName)) {
-        states = savedGameStates
-          .get(selectedName)!
-          .map((state) => cloneGameState(state));
-
-        game.applyGameState(cloneGameState(states[states.length - 1]));
-        redoStack = [];
-        notifyChange("stateChanged");
-      }
-    }
   }
 }
 
@@ -718,18 +698,6 @@ function getTypefromName(name: string): number {
   );
 }
 
-function passTime() {
-  redoStack = [];
-  game.updateGame();
-
-  for (let i = 0; i < GAME_SIZE; i++) {
-    for (let j = 0; j < GAME_SIZE; j++) {
-      simulateGrowth(game.getCell(i, j));
-    }
-  }
-
-  notifyChange("stateChanged");
-}
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 //character movement and controls
@@ -738,19 +706,23 @@ const keyHandlers: Record<string, () => void> = {
   ArrowRight: () => farmer.dragPos("E", CELL_SIZE),
   ArrowUp: () => farmer.dragPos("N", CELL_SIZE),
   ArrowDown: () => farmer.dragPos("S", CELL_SIZE),
-  " ": () => interact(farmer.getCurrentCell()!),
-  u: () => undo(),
-  r: () => redo(),
-  d: () => deleteLocalStorage(),
-  s: () => manualSave(),
-  l: () => loadSavedGame(),
-  t: () => passTime(),
+  " ": () => game.interact(farmer.getCurrentCell()!),
+  u: () => game.undo(),
+  r: () => game.redo(),
+  d: () => game.deleteLocalStorage(),
+  s: () => game.manualSave(),
+  l: () => game.loadSavedGame(),
+  t: () => game.passTime(),
 };
 
 document.addEventListener("keydown", (event) => {
   const specialHandler = keyHandlers[event.key];
-  if(specialHandler !== null) {
-    specialHandler();
+  if (specialHandler !== null) {
+    try {
+      specialHandler();
+    } catch (error) {
+      //wrong key does nothing
+    }
   }
 
   game.updateCurrentCellUI(farmer.getCurrentCell()!);
@@ -761,7 +733,7 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("stateChanged", () => {
   game.updateUI();
   game.draw(ctx!);
-  const encodedStates: EncodedState[] = states.map((gameState) => {
+  const encodedStates: EncodedState[] = game.states.map((gameState) => {
     return {
       grid: arrayBufferToBase64(gameState.grid),
       currentWeather: gameState.currentWeather,
@@ -794,6 +766,51 @@ window.addEventListener("beforeunload", () => {
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
-let game = new Game(GAME_SIZE);
+
+/*
+    //add saved games states if available
+    const storedData = localStorage.getItem("savedGames");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    if (storedData) {
+      const parsedData = JSON.parse(storedData) as [string, EncodedState[]][];
+      const decodedData: [string, GameState[]][] = parsedData.map(
+        ([saveName, encodedStates]) => {
+          return [
+            saveName,
+            encodedStates.map((encodedState) => {
+              return {
+                grid: base64ToArrayBuffer(encodedState.grid),
+                currentWeather: encodedState.currentWeather,
+                harvestedPlants: encodedState.harvestedPlants,
+              };
+            }),
+          ];
+        }
+      );
+      savedGameStates = new Map<string, GameState[]>(decodedData);
+    }
+
+    // check to see if autosave state is available
+    const localStore = localStorage.getItem("states");
+    if (localStore) {
+      const encodedStates = JSON.parse(localStore) as EncodedState[];
+      states = encodedStates.map((encodedState) => {
+        return {
+          grid: base64ToArrayBuffer(encodedState.grid),
+          currentWeather: encodedState.currentWeather,
+          harvestedPlants: encodedState.harvestedPlants,
+        };
+      });
+      this.grid = states[states.length - 1].grid;
+      this.weatherCondition =
+        states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
+      this.weatherDegree = states[states.length - 1].currentWeather[1];
+
+      const midIndex = Math.floor(this.size / 2);
+      this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
+      this.updateUI();
+    } else {*/
+
+let game = new Game(GAME_SIZE); //not including optional params creates a fresh game
 let farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 drawGame();
