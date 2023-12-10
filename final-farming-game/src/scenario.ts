@@ -23,3 +23,40 @@ export class Scenario {
     return this.currentVal >= this.targetVal;
   }
 }
+
+// json-scenario.ts
+interface Event {
+  time: number;
+  event: string;
+  target_cell: {
+    row: number;
+    col: number;
+  };
+  destruction_radius: number;
+}
+
+interface VictoryConditions {
+  harvest_goal: {
+    rose: number;
+    lily: number;
+  };
+}
+
+export class JSONScenario {
+  private eventsSchedule: Event[];
+  private victoryConditions: VictoryConditions;
+
+  constructor(json: string) {
+    const data = JSON.parse(json);
+    this.eventsSchedule = data.events_schedule;
+    this.victoryConditions = data.victory_conditions;
+  }
+
+  public getEventsSchedule(): Event[] {
+    return this.eventsSchedule;
+  }
+
+  public getVictoryConditions(): VictoryConditions {
+    return this.victoryConditions;
+  }
+}
