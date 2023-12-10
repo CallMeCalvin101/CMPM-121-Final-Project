@@ -1,62 +1,54 @@
-/* Created by Vincent Kurniadjaja
- * Use: create a new Scenerio class with a given item to check
- * (as a string) and target number to reach. Scenario will handle
- * holding the current score and can check to see if target is met
- */
+import scenario from "./scenarios.json";
 
-export class Scenario {
-  constructor(
-    readonly condition: string,
-    readonly targetVal: number,
-    private currentVal: number = 0
-  ) {}
-
-  checkCondition(input: string): boolean {
-    return input == this.condition;
-  }
-
-  increaseVal(num: number) {
-    this.currentVal += num;
-  }
-
-  checkTargetMet(): boolean {
-    return this.currentVal >= this.targetVal;
-  }
-}
-
-// json-scenario.ts
 interface Event {
   time: number;
-  event: string;
-  target_cell: {
-    row: number;
-    col: number;
-  };
-  destruction_radius: number;
+  name: string;
+  row: number;
+  col: number;
 }
 
 interface VictoryConditions {
-  harvest_goal: {
-    rose: number;
-    lily: number;
-  };
+  harvest_goal: number[];
 }
 
-export class JSONScenario {
-  private eventsSchedule: Event[];
-  private victoryConditions: VictoryConditions;
+interface JSONScenario {
+  events_schedule: Event[];
+  victory_conditions: VictoryConditions;
+}
 
-  constructor(json: string) {
-    const data = JSON.parse(json);
-    this.eventsSchedule = data.events_schedule;
-    this.victoryConditions = data.victory_conditions;
+export class Scenario {
+  private events_schedule: Event[];
+  private victory_conditions: VictoryConditions;
+  private current_conditions: number[];
+
+  constructor(jsonScenario: JSONScenario) {
+    this.events_schedule = jsonScenario.events_schedule;
+    this.victory_conditions = jsonScenario.victory_conditions;
+    this.current_conditions = [];
   }
 
   public getEventsSchedule(): Event[] {
-    return this.eventsSchedule;
+    return this.events_schedule;
   }
 
   public getVictoryConditions(): VictoryConditions {
-    return this.victoryConditions;
+    return this.victory_conditions;
+  }
+
+  public updateCurrentConditions(plantsHarvested: number[]): void {
+    plantsHarvested.forEach(
+      (value, index) => (this.current_conditions[index] = value)
+    );
+    console.log("updated scenario: ", this.current_conditions);
+  }
+
+  public victoryConditionsMet(): boolean {
+    return this.victory_conditions.harvest_goal.every(
+      (value, index) => value <= this.current_conditions[index]
+    );
   }
 }
+
+//test
+const testScenario: Scenario = new Scenario(scenario as JSONScenario);
+console.log(testScenario);

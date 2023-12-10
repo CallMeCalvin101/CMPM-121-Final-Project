@@ -1,6 +1,7 @@
 import "./style.css";
 import { Scenario } from "./scenario.ts";
 import jsonPlants from "./plants.json";
+import gameConditions from "./scenarios.json";
 
 //------------------------------------ Global Vars ------------------------------------------------------------------------------------
 
@@ -9,7 +10,7 @@ const gameHeight = (canvas! as HTMLCanvasElement).height;
 const gameWidth = (canvas! as HTMLCanvasElement).width;
 
 const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
-const testScenario = new Scenario("Sunflower", 3);
+const testScenario = new Scenario(gameConditions);
 let savedGameStates = new Map<string, GameState[]>();
 
 const cellType = Object.freeze({
@@ -43,7 +44,7 @@ interface Cell {
   growthLevel: number;
 }
 
-const CELL_BYTES = 6;
+export const CELL_BYTES = 6;
 
 interface GameState {
   grid: ArrayBuffer;
@@ -163,7 +164,7 @@ function simulateGrowth(cell: Cell) {
   }
 }
 
-class Game {
+export class Game {
   size: number;
   grid: ArrayBuffer;
   weatherCondition: string; // 'sunny' or 'rainy'
@@ -483,7 +484,7 @@ class Game {
   updateUI() {
     //Controls
     const controlsUI = document.getElementById("controls");
-    controlsUI!.innerHTML= `<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.`;
+    controlsUI!.innerHTML = `<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.`;
 
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
@@ -638,16 +639,6 @@ function promptPlantSelection(): string {
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
 
-function updateScenario(action: string) {
-  if (testScenario.checkCondition(action)) {
-    testScenario.increaseVal(1);
-  }
-
-  if (testScenario.checkTargetMet()) {
-    console.log("SCENARIO COMPLETE!!!");
-  }
-}
-
 function getNameFromType(type: number): string {
   switch (type) {
     case cellType.dirt: {
@@ -701,6 +692,12 @@ function getTypefromName(name: string): number {
   );
 }
 
+function checkScenario(scenario: Scenario) {
+  //update scenario with current game conditions
+  scenario.updateCurrentConditions(plantsHarvested);
+  //return true or false if victory conditions met
+  return scenario.victoryConditionsMet();
+}
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 //character movement and controls
@@ -744,6 +741,8 @@ document.addEventListener("stateChanged", () => {
     };
   });
   localStorage.setItem("states", JSON.stringify(encodedStates));
+
+  if (checkScenario(testScenario)) console.log("Scenario Complete");
 });
 
 //store saved games before player exits

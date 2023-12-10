@@ -1,0 +1,13 @@
+{
+    "events_schedule": [
+      {
+        "time": 2,
+        "name": "RandomGrassGrowth",
+        "row": 4,
+        "col": 2
+        }
+    ],
+    "victory_conditions": {
+      "harvest_goal": [1,1,1]
+    }
+  }
