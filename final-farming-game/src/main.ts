@@ -481,6 +481,10 @@ class Game {
   }
   //update the weather condition, player seeds and current Cell text on screen
   updateUI() {
+    //Controls
+    const controlsUI = document.getElementById("controls");
+    controlsUI!.innerHTML= `<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.`;
+
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
     ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${getAllFlowerTypes().join(
