@@ -1,0 +1,19 @@
+{
+    "events_schedule": [
+      {
+        "time": 2,
+        "event": "RandomGrassGrowth",
+        "target_cell": {
+          "row": 4,
+          "col": 2
+        },
+        "destruction_radius": 1
+      }
+    ],
+    "victory_conditions": {
+      "harvest_goal": {
+        "rose": 3,
+        "lily": 3
+      }
+    }
+  }
