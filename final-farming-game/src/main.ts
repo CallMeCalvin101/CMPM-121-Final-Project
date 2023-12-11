@@ -182,12 +182,20 @@ export class Game {
     this.weatherDegree = weatherDegree ? weatherDegree : 3;
     this.states = states ? states : [];
     this.redoStack = [];
-    if (!grid) this.generateRandomGrid();
-
+    if (!grid) {
+      //if creating a fresh game
+      this.generateRandomGrid();
+      //apply scenario starting conditions
+      const startConditions = testScenario.getStartingConditions();
+      this.weatherCondition = startConditions[0] == 0 ? "sunny" : "rainy";
+      this.weatherDegree = startConditions[1];
+      this.updateUI();
+      this.simulateWeather();
+    } else {
+      this.updateGame();
+    }
     const midIndex = Math.floor(this.size / 2);
     this.updateCurrentCellUI(this.getCell(midIndex, midIndex));
-    this.updateGame();
-    //}
   }
 
   storeCell(cell: Cell) {
@@ -809,6 +817,7 @@ if (autosave) {
   const weatherCondition =
     states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
   const weatherDegree = states[states.length - 1].currentWeather[1];
+  flowersHarvested = states[states.length - 1].harvestedPlants;
 
   game = new Game(GAME_SIZE, grid, states, weatherCondition, weatherDegree);
 } else {
