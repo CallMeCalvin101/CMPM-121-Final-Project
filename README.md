@@ -45,7 +45,7 @@ F0 D:  Depending on the current weather, there is a different chance of each cel
 ![F1.a data structure diagram](./Devlog%20images/IMG_0020.png)
 
 ## F1 B:
-The undo/redo system is implemented by tracking game states across play. When the player interacts with a cell, the new game state is pushed to an array of `GameState` objects. When a player wants to undo their last action, the current game state is popped from the `states` array and pushed to a `redoStack` array. The previous game state (which is now the newest element in the `state` array is then applied to the current game state and all UI is updated. Similarly, when the player has a redo action available, the gamestate is popped from the `redoStack` and pushed to the `states` array and is then applied to the current game state, then the UI is updated.
+The undo/redo system is implemented by tracking game states across play. When the player interacts with a cell, the new game state is pushed to an array of `GameState` objects. When a player wants to undo their last action, the current game state is popped from the `states` array and pushed to a `redoStack` array. The previous game state which is now the newest element in the `state` array is then applied to the current game state and all UI is updated. Similarly, when the player has a redo action available, the gamestate is popped from the `redoStack` and pushed to the `states` array and is then applied to the current game state, then the UI is updated.
 
 ## F1 C:
 The player is able to manually save their current game using the “S” key. The player is prompted to select an optional name for their saved game. A saved game is just an array of `GameState` objects and we used a map called `savedGameStates` that maps strings(names of saved games) to arrays of `GameState` objects. We have an event listener for “beforeunload” event that will save the `savedGameStates` map to local storage before the document is unloaded. The player can also load a saved game using the “L” key. The player will be prompted to select a saved game and the array of `GameStates` will replace the current `states` array, allowing the player to load a saved game while still having access to their game state history, preserving the undo/redo system across loaded games. The player can also use the “d” key to delete all saved games and start the game over.
@@ -66,8 +66,61 @@ The problem came with trying to fix all of our existing code after messing with 
 
 Although this cleaning of the code is tedious, it is necessary in order to have a smoother development process down the line. Even when implementing the code and reflecting on it, some of the immediate next steps is to refactor the refactored code since we found out that there are ways to further simplify the code.
 
+# Tony Guizar, Gordon Cai, Vincent Kurniadjaja, Steven Ren, Jane Tran - 12/11/2023
+## F2 Deblog
+
+### F0+F1
+The devlog should briefly comment on how the previous F0 and F1 requirements remain satisfied in the latest version of your software. If no major changes were made, you can just simlpy state that no major changes were made. However, if you evolved your design to improve code quality (a good idea!) this section of your devlog entry would be a good place to brag about it.
+We moved some of the helper functions to be class methods in our `Game` class to associate the functions with the `Game` object, as well as reduce the amount of loose functions within the code. In the process, we broke the auto-save functionality of the game, so we had to go back and fix that. These did not affect the overall functionality of F0 and F1. We also added some slight UI changes for the player. We added on-screen controls, as well as a list of the current game requirements and scenarios.. 
+### F2 External DSL for Scenario Design
+```
+{
+    "events_schedule": [
+      {
+        "time": 2,
+        "name": "WeedGrowth",
+        "row": 4,
+        "col": 2,
+        "complete": false
+        }
+    ],
+    "starting_conditions": [1, 6],
+    "victory_conditions": {
+      "harvest_goal": [1,1,1]
+    }
+  }
 
 ```
+```
+export class Scenario {
+  private events_schedule: Event[];
+  private starting_conditions: number[];
+  private victory_conditions: VictoryConditions;
+  private current_harvest: number[];
+  private current_time: number;
+
+  constructor(jsonScenario: JSONScenario) {
+    this.events_schedule = jsonScenario.events_schedule;
+    this.starting_conditions = jsonScenario.starting_conditions;
+    this.victory_conditions = jsonScenario.victory_conditions;
+    this.current_harvest = [];
+    this.current_time = 0;
+  }
+}
+```
+
+
+We decided to use JSON as our external DSL to define gameplay scenarios like events, starting conditions, and victory conditions . Below is an example of one of our scenario definitions:
+ 
+From the JSON, any potential designers can define the scenario’s name, amount of rows, columns, frequency of any scenario conditions, as well as the victory conditions of the game. The `harvest_goal` is an array of numbers to work in conjunction with our plant definition internal DSL, where each plant is associated with an index in the array and the value in that index represents the required number of harvested plants. 
+In our scenario.ts file, the scenario,json file is read and parsed into a scenario that is playable within the game. 
+### F2 Internal DSL for Plants and Growth Conditions
+
+```
+// Example usage:
+// plant [name] [color] [sunReq] [waterReq] [vibeReq: 0-> none, 1->requires alone, 2->requires friends, 3->requires family]
+// weed [name] [color] -> [persistence (1-10)] <- this last one not implemented yet
+
 const dslCode = `flower Sunflower yellow 3 2 0
 flower Rose pink 2 3 0
 flower Daffodil #FFD700 3 2 0
@@ -76,3 +129,9 @@ flower Marigold #FFA500 4 2 0
 flower Fuchsia #FF00FF 3 3 0
 weed crabgrass green`;
 ```
+
+This is the Internal DSL that we are using in our game. The host language is Typescript. The plants contain 4 fields for their names, colors, sun requirements, and water requirements. There is an optional 5th requirement that is dependent on the number and type of plants that surround it.
+This is implemented using a kind of [subclass sandbox](https://gameprogrammingpatterns.com/subclass-sandbox.html) pattern where there is a base `PlantCommand` interface that contains an `addTo` method. The keywords `flower` and `weed` construct their respective `FlowerCommand` and `WeedCommand` classes with the provided attributes. Then the ‘addTo’ method is called on each command object, which simply takes a `Plant[][]` representing the array of plant definitions, and appends this plant definition to it.
+## Reflection
+Looking back on how you achieved the new F2 requirements, how has your team’s plan changed? Did you reconsider any of the choices you previously described for Tools and Materials or your Roles? Has your game design evolved now that you've started to think about giving the player more feedback? It would be very suspicious if you didn’t need to change anything. There’s learning value in you documenting how your team’s thinking has changed over time.
+Our team’s plan has not changed very significantly. With every design requirement, our game is getting much more modular and organized.The jump from F0 to F1 was rough due to the fact that our team had to completely rebuild what we had. In order to avoid this, we are constantly refactoring the code to account for potential new requirements.
