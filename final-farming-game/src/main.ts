@@ -41,12 +41,14 @@ export const CELL_BYTES = 6;
 
 interface GameState {
   grid: ArrayBuffer;
+  time: number;
   currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
   harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex
 }
 
 interface EncodedState {
   grid: string;
+  time: number;
   currentWeather: number[]; //[weatherCondition weatherDegree] weather condition 0->sunny 1->rainy
   harvestedPlants: number[]; //value represents number of harvested plants for each plantIndex
 }
@@ -163,6 +165,7 @@ function simulateGrowth(cell: Cell) {
 export class Game {
   size: number;
   grid: ArrayBuffer;
+  time: number;
   weatherCondition: string; // 'sunny' or 'rainy'
   weatherDegree: number; //magnitude of sun or rain
   states: GameState[]; //array of previous game states
@@ -172,12 +175,14 @@ export class Game {
   constructor(
     gridSize: number,
     grid?: ArrayBuffer,
+    time?: number,
     states?: GameState[],
     weatherCondition?: string,
     weatherDegree?: number
   ) {
     this.size = gridSize;
     this.grid = grid ? grid : new ArrayBuffer(gridSize * gridSize * CELL_BYTES);
+    this.time = time ? time : 0;
     this.weatherCondition = weatherCondition ? weatherCondition : "sunny";
     this.weatherDegree = weatherDegree ? weatherDegree : 3;
     this.states = states ? states : [];
@@ -363,6 +368,7 @@ export class Game {
   getCurrentGameState(): GameState {
     const currentState: GameState = {
       grid: this.cloneGrid(),
+      time: this.time,
       currentWeather: Array.from([
         this.weatherCondition == "sunny" ? 0 : 1,
         this.weatherDegree,
@@ -383,6 +389,7 @@ export class Game {
 
     const clonedState: GameState = {
       grid: clonedGrid,
+      time: state.time,
       currentWeather: clonedCurrentWeather,
       harvestedPlants: clonedHarvestedPlants,
     };
@@ -398,6 +405,7 @@ export class Game {
       localStorage.removeItem("states");
       localStorage.removeItem("savedGames");
       this.states = [];
+      this.time = 0;
       this.redoStack = [];
       savedGameStates.clear();
       game = new Game(GAME_SIZE);
@@ -428,6 +436,7 @@ export class Game {
       const encodedGameStates: EncodedState[] = gameStates.map((gameState) => {
         return {
           grid: arrayBufferToBase64(gameState.grid),
+          time: gameState.time,
           currentWeather: gameState.currentWeather,
           harvestedPlants: gameState.harvestedPlants,
         };
@@ -492,8 +501,12 @@ export class Game {
   //update the weather condition, player seeds and current Cell text on screen
   updateUI() {
     //Controls
-    const controlsUI = document.getElementById("controls");
-    controlsUI!.innerHTML = `<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.`;
+    const controlsUI = document.getElementById("controls")!;
+    controlsUI.innerHTML = `<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.`;
+
+    //Time UI
+    const currentTime = document.getElementById("time")!;
+    currentTime.innerHTML = `<strong>Day:</strong> ${this.time}`;
 
     //Win Conditions UI
     const victoryConditionUI = document.getElementById("win");
@@ -503,8 +516,8 @@ export class Game {
       .join(", ")}`; //only works right now since theres only one condition/target
 
     //Seeds UI
-    const ownedSeedElement = document.getElementById("seed");
-    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${flowerTypes
+    const ownedSeedElement = document.getElementById("seed")!;
+    ownedSeedElement.innerHTML = `<strong>Owned Seeds:</strong> ${flowerTypes
       .map((flower) => flower.name)
       .join(", ")}`;
 
@@ -515,18 +528,11 @@ export class Game {
       .join(", ")}`;
 
     //Weather UI
-    const weatherElement = document.getElementById("weather");
-    weatherElement!.innerHTML = `<strong>Current Weather:</strong> ${
+    const weatherElement = document.getElementById("weather")!;
+    weatherElement.innerHTML = `<strong>Current Weather:</strong> ${
       this.weatherCondition.charAt(0).toUpperCase() +
       this.weatherCondition.slice(1)
     }, <strong>Severity:</strong> ${this.weatherDegree}`;
-
-    console.log(
-      "in UI - weather: ",
-      this.weatherCondition,
-      " ",
-      this.weatherDegree
-    );
   }
 
   //update water and sun levels for all plants on grid
@@ -571,6 +577,7 @@ export class Game {
 
   applyGameState(state: GameState) {
     game.grid = state.grid.slice(0);
+    game.time = state.time;
     flowersHarvested = Array.from(state.harvestedPlants);
 
     game.weatherCondition = state.currentWeather[0] == 0 ? "sunny" : "rainy";
@@ -584,6 +591,8 @@ export class Game {
   }
 
   passTime() {
+    this.time++;
+    this.states.push(this.getCurrentGameState());
     this.redoStack = [];
     this.updateGame();
 
@@ -702,7 +711,7 @@ function promptPlantSelection(): string {
 
 function checkScenario(scenario: Scenario) {
   //update scenario with current game conditions
-  scenario.updateCurrentConditions(flowersHarvested);
+  scenario.updateCurrentConditions(game.time, flowersHarvested);
   //return true or false if victory conditions met
   return scenario.victoryConditionsMet();
 }
@@ -744,6 +753,7 @@ document.addEventListener("stateChanged", () => {
   const encodedStates: EncodedState[] = game.states.map((gameState) => {
     return {
       grid: arrayBufferToBase64(gameState.grid),
+      time: gameState.time,
       currentWeather: gameState.currentWeather,
       harvestedPlants: gameState.harvestedPlants,
     };
@@ -763,6 +773,7 @@ window.addEventListener("beforeunload", () => {
     const encodedGameStates: EncodedState[] = gameStates.map((gameState) => {
       return {
         grid: arrayBufferToBase64(gameState.grid),
+        time: gameState.time,
         currentWeather: gameState.currentWeather,
         harvestedPlants: gameState.harvestedPlants,
       };
@@ -789,6 +800,7 @@ if (storedData) {
         encodedStates.map((encodedState) => {
           return {
             grid: base64ToArrayBuffer(encodedState.grid),
+            time: encodedState.time,
             currentWeather: encodedState.currentWeather,
             harvestedPlants: encodedState.harvestedPlants,
           };
@@ -809,6 +821,7 @@ if (autosave) {
   states = encodedStates.map((encodedState) => {
     return {
       grid: base64ToArrayBuffer(encodedState.grid),
+      time: encodedState.time,
       currentWeather: encodedState.currentWeather,
       harvestedPlants: encodedState.harvestedPlants,
     };
@@ -818,8 +831,16 @@ if (autosave) {
     states[states.length - 1].currentWeather[0] == 0 ? "sunny" : "rainy";
   const weatherDegree = states[states.length - 1].currentWeather[1];
   flowersHarvested = states[states.length - 1].harvestedPlants;
+  const currentTime = states[states.length - 1].time;
 
-  game = new Game(GAME_SIZE, grid, states, weatherCondition, weatherDegree);
+  game = new Game(
+    GAME_SIZE,
+    grid,
+    currentTime,
+    states,
+    weatherCondition,
+    weatherDegree
+  );
 } else {
   game = new Game(GAME_SIZE); //not including optional params creates a fresh game
 }

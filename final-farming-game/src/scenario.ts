@@ -20,12 +20,14 @@ export class Scenario {
   private starting_conditions: number[];
   private victory_conditions: VictoryConditions;
   private current_harvest: number[];
+  private current_time: number;
 
   constructor(jsonScenario: JSONScenario) {
     this.events_schedule = jsonScenario.events_schedule;
     this.starting_conditions = jsonScenario.starting_conditions;
     this.victory_conditions = jsonScenario.victory_conditions;
     this.current_harvest = [];
+    this.current_time = 0;
   }
 
   public getEventsSchedule(): Event[] {
@@ -40,10 +42,14 @@ export class Scenario {
     return this.starting_conditions;
   }
 
-  public updateCurrentConditions(plantsHarvested: number[]): void {
+  public updateCurrentConditions(
+    time: number,
+    plantsHarvested: number[]
+  ): void {
     plantsHarvested.forEach(
       (value, index) => (this.current_harvest[index] = value)
     );
+    this.current_time = time;
   }
 
   public victoryConditionsMet(): boolean {
