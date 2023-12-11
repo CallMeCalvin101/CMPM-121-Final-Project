@@ -65,3 +65,14 @@ After redefining a cell, we then refactored our grid class to go from a cell mat
 The problem came with trying to fix all of our existing code after messing with the plant class and the grid, 2 aspects of our code which many other objects depend upon. Although it did take a bit to refactor all of the code, it wasn’t that difficult to convert all of the old grid matrices into the new byte array, since when implementing the grid array, we had helper functions that was able to index and store cells using rows and columns, exactly how we stored cells in the old matrix. The more difficult aspects of the refactoring came from dealing with the manipulation of the matrix when we saved and loaded objects. Since we converted the grid into a json in order to save all of the game's states, a lot of errors came up since byte arrays are more finicky when doing that conversion as opposed to a double array.
 
 Although this cleaning of the code is tedious, it is necessary in order to have a smoother development process down the line. Even when implementing the code and reflecting on it, some of the immediate next steps is to refactor the refactored code since we found out that there are ways to further simplify the code.
+
+
+```
+const dslCode = `flower Sunflower yellow 3 2 0
+flower Rose pink 2 3 0
+flower Daffodil #FFD700 3 2 0
+flower Lily #FFFFFF 2 3 0
+flower Marigold #FFA500 4 2 0
+flower Fuchsia #FF00FF 3 3 0
+weed crabgrass green`;
+```
