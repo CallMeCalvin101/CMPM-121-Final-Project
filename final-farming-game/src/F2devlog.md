@@ -101,7 +101,7 @@ function getPlantTypes(dslCode: string): Plant[][] {
 // Example usage:
 // plant [name] [color] [sunReq] [waterReq] [vibeReq: 0-> none, 1->requires alone, 2->requires friends, 3->requires family]
 // weed [name] [color] -> [persistence (1-10)] <- this last one not implemented yet
-
+```
 const dslCode = `flower Sunflower yellow 3 2 0
 flower Rose pink 2 3 0
 flower Daffodil #FFD700 3 2 0
@@ -109,5 +109,6 @@ flower Lily #FFFFFF 2 3 0
 flower Marigold #FFA500 4 2 0
 flower Fuchsia #FF00FF 3 3 0
 weed crabgrass green`;
+```
 export const flowerTypes: Plant[] = getPlantTypes(dslCode)[0];
 export const weedTypes: Plant[] = getPlantTypes(dslCode)[1];
