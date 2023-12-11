@@ -1,5 +1,3 @@
-import scenario from "./scenarios.json";
-
 interface Event {
   time: number;
   name: string;
@@ -39,7 +37,6 @@ export class Scenario {
     plantsHarvested.forEach(
       (value, index) => (this.current_conditions[index] = value)
     );
-    console.log("updated scenario: ", this.current_conditions);
   }
 
   public victoryConditionsMet(): boolean {
@@ -48,7 +45,3 @@ export class Scenario {
     );
   }
 }
-
-//test
-const testScenario: Scenario = new Scenario(scenario as JSONScenario);
-console.log(testScenario);

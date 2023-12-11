@@ -1,8 +1,7 @@
 import "./style.css";
 import { Scenario } from "./scenario.ts";
-import jsonPlants from "./plants.json";
 import gameConditions from "./scenarios.json";
-
+import { flowerTypes, weedTypes } from "./plants.ts";
 //------------------------------------ Global Vars ------------------------------------------------------------------------------------
 
 const canvas = document.getElementById("game");
@@ -13,30 +12,24 @@ const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario(gameConditions);
 let savedGameStates = new Map<string, GameState[]>();
 
-const cellType = Object.freeze({
-  dirt: 0,
-  crabgrass: 1,
-  sunflower: 2,
-  rose: 3,
-  daffodil: 4,
-  lily: 5,
-  marigold: 6,
-  fuchsia: 7,
-});
-
-const allPlants: Map<number, Plant> = new Map<number, Plant>();
-definePlantTypesFromJSON();
-
 const MAX_PLANT_GROWTH = 15;
 
-let plantsHarvested: number[] = getAllFlowerTypes().map(() => 0);
+// flowers the player has harvested
+let flowersHarvested: number[] = [];
+flowerTypes.forEach(() => flowersHarvested.push(0));
 
 const GAME_SIZE = 7;
 const CELL_SIZE = gameWidth / GAME_SIZE;
 
+//maps plant names to integer IDs
+const plants: Map<number, string> = new Map<number, string>();
+
+const allPlantTypes: Plant[] = [...flowerTypes, ...weedTypes];
+allPlantTypes.forEach((plant, index) => plants.set(index + 1, plant.name));
+
 //------------------------------------ Class def ------------------------------------------------------------------------------------
 interface Cell {
-  type: number;
+  plant: number;
   rowIndex: number;
   colIndex: number;
   waterLevel: number;
@@ -121,28 +114,31 @@ class Character {
   }
 }
 
-interface Plant {
+export interface Plant {
   name: string;
+  color: string;
   sunRequisite: number;
   waterRequisite: number;
-  color: string;
+  vibeRequisite: number;
 }
 
 function simulateGrowth(cell: Cell) {
-  if (cell.type == cellType.dirt || cell.type == cellType.crabgrass) {
+  //if there are no plant here or if plant is a weed, exit
+  const plantID = plants.get(cell.plant);
+  if (!plantID || isWeed(cell.plant)) {
     return;
   }
 
-  const plantType = allPlants.get(cell.type)!;
+  const plant = getPlant(cell.plant)!;
   // Simulate general growth based on accumulated sun and water levels
   if (
-    cell.sunLevel >= plantType.sunRequisite &&
-    cell.waterLevel >= plantType.waterRequisite
+    cell.sunLevel >= plant.sunRequisite &&
+    cell.waterLevel >= plant.waterRequisite
   ) {
     if (cell.growthLevel < MAX_PLANT_GROWTH) {
       cell.growthLevel += 1;
       console.log(
-        plantType.name,
+        plant.name,
         " in cell (",
         cell.rowIndex,
         ",",
@@ -153,7 +149,7 @@ function simulateGrowth(cell: Cell) {
       game.storeCell(cell);
     } else {
       console.log(
-        plantType.name,
+        plant.name,
         "in cell: (",
         cell.rowIndex,
         ",",
@@ -198,7 +194,7 @@ export class Game {
     const gridView = new DataView(this.grid);
     const byteOffset = (cell.rowIndex * this.size + cell.colIndex) * CELL_BYTES;
 
-    gridView.setUint8(byteOffset, cell.type);
+    gridView.setUint8(byteOffset, cell.plant);
     gridView.setUint8(byteOffset + 1, cell.rowIndex);
     gridView.setUint8(byteOffset + 2, cell.colIndex);
     gridView.setUint8(byteOffset + 3, cell.waterLevel);
@@ -210,14 +206,14 @@ export class Game {
     const gridView = new DataView(this.grid);
     const byteOffset = (row * this.size + col) * CELL_BYTES;
 
-    const type = gridView.getUint8(byteOffset);
+    const plant = gridView.getUint8(byteOffset);
     const rowIndex = gridView.getUint8(byteOffset + 1);
     const colIndex = gridView.getUint8(byteOffset + 2);
     const waterLevel = gridView.getUint8(byteOffset + 3);
     const sunLevel = gridView.getUint8(byteOffset + 4);
     const growthLevel = gridView.getUint8(byteOffset + 5);
 
-    return { type, rowIndex, colIndex, waterLevel, sunLevel, growthLevel };
+    return { plant, rowIndex, colIndex, waterLevel, sunLevel, growthLevel };
   }
 
   generateRandomGrid() {
@@ -226,7 +222,7 @@ export class Game {
         const randomValue = Math.random();
 
         const newCell: Cell = {
-          type: cellType.dirt,
+          plant: 0,
           rowIndex: i,
           colIndex: j,
           waterLevel: 0,
@@ -235,7 +231,7 @@ export class Game {
         };
 
         if (randomValue < 0.07) {
-          newCell.type = cellType.crabgrass;
+          newCell.plant = getID(weedTypes[0].name)!;
         }
 
         this.storeCell(newCell);
@@ -251,7 +247,9 @@ export class Game {
         const y = i * CELL_SIZE;
         const cell = this.getCell(i, j);
 
-        ctx.fillStyle = allPlants.get(cell.type)!.color;
+        ctx.fillStyle = getPlant(cell.plant)
+          ? getPlant(cell.plant)!.color
+          : "saddlebrown";
         ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
       }
     }
@@ -281,18 +279,19 @@ export class Game {
 
   // interacts with cell
   interact(cell: Cell) {
-    if (cell.type != cellType.dirt) {
+    if (cell.plant != 0) {
       // if there is a plant here, reap it (Weeds and Flowers)
       this.reapPlant(cell);
       this.redoStack = []; //clear redo since action was performed
       this.states.push(this.getCurrentGameState());
       notifyChange("stateChanged");
-    } else if (cell.type == cellType.dirt) {
-      //otherwise prompt player for action
+    } else {
+      //otherwise prompt player for action on empty cell
       const inputtedPlant = promptPlantSelection().toLowerCase();
-      if (getTypefromName(inputtedPlant) > 1) {
-        //don't do this for dirt or crabgrass
-        cell.type = getTypefromName(inputtedPlant);
+      const plantID = getID(inputtedPlant)!;
+      if (!isWeed(plantID)) {
+        //don't do this for weeds
+        cell.plant = plantID;
         cell.sunLevel = 0;
         cell.waterLevel = 0;
         cell.growthLevel = 0;
@@ -302,33 +301,35 @@ export class Game {
         this.states.push(this.getCurrentGameState());
         notifyChange("stateChanged");
       } else {
-        console.log("Invalid plant selection.");
+        alert("Invalid plant selection.");
       }
-    } else {
-      alert("No plants available!");
     }
   }
 
   //removes a plant from current cell
   reapPlant(currentCell: Cell) {
     const confirmReap = window.confirm(
-      `Do you want to reap the ${currentCell.type} plant?\nDetails:\nSun Level: ${currentCell.sunLevel}, Water Level: ${currentCell.waterLevel}, Growth Level: ${currentCell.growthLevel}`
+      `Do you want to reap the ${
+        getPlant(currentCell.plant)!.name
+      } plant?\nDetails:\nSun Level: ${currentCell.sunLevel}, Water Level: ${
+        currentCell.waterLevel
+      }, Growth Level: ${currentCell.growthLevel}`
     );
 
     if (!confirmReap) return;
 
-    if (currentCell.type != cellType.crabgrass) {
+    if (!isWeed(currentCell.plant)) {
       // do not add weeds to inventory
-      const reapedPlant = getNameFromType(currentCell.type);
+      const reapedPlant = getPlant(currentCell.plant)!;
       if (currentCell.growthLevel >= MAX_PLANT_GROWTH) {
         // player only collects plant if it was ready for harvest
-        farmer.plants.push(allPlants.get(currentCell.type)!);
-        plantsHarvested[currentCell.type - 2] += 1;
+        farmer.plants.push(clonePlant(getPlant(currentCell.plant)!));
+        flowersHarvested[getFlowerIndex(getPlant(currentCell.plant)!.name)]++;
         console.log(
           "HARVESTED ",
           reapedPlant,
           "! ",
-          plantsHarvested[currentCell.type],
+          flowersHarvested[getFlowerIndex(getPlant(currentCell.plant)!.name)],
           " ",
           reapedPlant,
           "s in inventory"
@@ -337,11 +338,11 @@ export class Game {
       }
     }
     console.log(
-      `You reaped the ${getNameFromType(currentCell.type)} plant! in  cell (${
+      `You reaped the ${getPlant(currentCell.plant)!.name} plant! in  cell (${
         currentCell.rowIndex
       },${currentCell.colIndex})`
     );
-    currentCell.type = cellType.dirt; // Remove plant from cell
+    currentCell.plant = 0; // Remove plant from cell
     currentCell.sunLevel = 0;
     currentCell.waterLevel = 0;
     currentCell.growthLevel = 0;
@@ -358,7 +359,7 @@ export class Game {
         this.weatherCondition == "sunny" ? 0 : 1,
         this.weatherDegree,
       ]),
-      harvestedPlants: Array.from(plantsHarvested.values()),
+      harvestedPlants: Array.from(flowersHarvested.values()),
     };
 
     return this.cloneGameState(currentState);
@@ -490,22 +491,20 @@ export class Game {
     const victoryConditionUI = document.getElementById("win");
     victoryConditionUI!.innerHTML = `<strong>Victory Condition: </strong> Plant the following! ${testScenario
       .getVictoryConditions()
-      .map((value, index) => `${getAllFlowerTypes()[index]}: ${value}`)
+      .map((value, index) => `${getPlant(index + 1)!.name}: ${value}`)
       .join(", ")}`; //only works right now since theres only one condition/target
 
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
-    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${getAllFlowerTypes().join(
-      `, `
-    )}`;
+    ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${flowerTypes
+      .map((flower) => flower.name)
+      .join(", ")}`;
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
-    harvestedPlants!.innerHTML = `<strong>Harvested Plants:</strong> ${Array.from(
-      getAllFlowerTypes().map((plantType, index) =>
-        [plantType, plantsHarvested[index]].join(": ")
-      )
-    ).join(", ")}`;
+    harvestedPlants!.innerHTML = `<strong>Harvested Flowers:</strong> ${flowerTypes
+      .map((flower, index) => [flower.name, flowersHarvested[index]].join(": "))
+      .join(", ")}`;
 
     //Weather UI
     const weatherElement = document.getElementById("weather");
@@ -549,8 +548,14 @@ export class Game {
 
   updateCurrentCellUI(cell: Cell) {
     const cellElement = document.getElementById("cell");
-    if (cell.type) {
-      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}]. <strong>Plant Type:</strong> ${cell.type} <strong>Water Level:</strong> ${cell.waterLevel}. <strong>Growth Level:<strong> ${cell.growthLevel}`;
+    if (cell.plant) {
+      cellElement!.innerHTML = `You are on <strong>cell</strong> [${
+        cell.rowIndex
+      },${cell.colIndex}]. <strong>Plant Type:</strong> ${
+        getPlant(cell.plant)!.name
+      } <strong>Water Level:</strong> ${
+        cell.waterLevel
+      }. <strong>Growth Level:<strong> ${cell.growthLevel}`;
     } else {
       cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}], There is no Plant here`;
     }
@@ -558,7 +563,7 @@ export class Game {
 
   applyGameState(state: GameState) {
     game.grid = state.grid.slice(0);
-    plantsHarvested = Array.from(state.harvestedPlants);
+    flowersHarvested = Array.from(state.harvestedPlants);
 
     game.weatherCondition = state.currentWeather[0] == 0 ? "sunny" : "rainy";
     game.weatherDegree = state.currentWeather[1];
@@ -596,6 +601,47 @@ export class Game {
 // notify observer of change by dispatching a new event
 function notifyChange(name: string) {
   document.dispatchEvent(new Event(name));
+}
+
+//returns true if plant ID corresponds to a weed, false otherwise
+function isWeed(plantID: number): boolean {
+  return weedTypes.some((plant) => plant.name == plants.get(plantID));
+}
+
+//returns the Plant object for a given plant ID
+function getPlant(id: number): Plant | undefined {
+  const plantName = plants.get(id)!;
+  if (plantName) {
+    return allPlantTypes.find(
+      (plant) => plant.name.toLowerCase() == plantName.toLowerCase()
+    );
+  } else {
+    return undefined;
+  }
+}
+
+function clonePlant(plant: Plant): Plant {
+  return { ...plant };
+}
+
+//returns the Plant ID for a given plant name
+function getID(plantName: string): number | null {
+  for (const [key, value] of plants.entries()) {
+    if (value.toLowerCase() === plantName.toLowerCase()) {
+      return key;
+    }
+  }
+  return null;
+}
+
+//returns the flower index of a given plant ID (flower index of flowersHarvested)
+function getFlowerIndex(name: string): number {
+  let flowerIndex = -1;
+  flowerTypes.forEach((flower, index) => {
+    console.log(flower.name.toLowerCase(), name.toLowerCase());
+    if (flower.name.toLowerCase() == name.toLowerCase()) flowerIndex = index;
+  });
+  return flowerIndex;
 }
 
 // convert ArrayBuffer to Base64
@@ -641,67 +687,14 @@ function drawGame() {
 }
 
 function promptPlantSelection(): string {
-  const plantNames = getAllFlowerTypes().join(", ");
+  const plantNames = flowerTypes.map((flower) => flower.name).join(", ");
   const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
 
-function getNameFromType(type: number): string {
-  switch (type) {
-    case cellType.dirt: {
-      return "dirt";
-    }
-    case cellType.crabgrass: {
-      return "crabgrass";
-    }
-    case cellType.sunflower: {
-      return "sunflower";
-    }
-    case cellType.rose: {
-      return "rose";
-    }
-    case cellType.daffodil: {
-      return "daffodil";
-    }
-    case cellType.lily: {
-      return "lily";
-    }
-    case cellType.marigold: {
-      return "marigold";
-    }
-    case cellType.fuchsia: {
-      return "fuchsia";
-    }
-  }
-  return "nothing";
-}
-
-function definePlantTypesFromJSON() {
-  jsonPlants.allPlantTypes.forEach((plant) => {
-    allPlants.set(plant.type, plant);
-  });
-}
-
-function getAllFlowerTypes(): string[] {
-  const flowers: string[] = [];
-  const offset = 2;
-  allPlants.forEach((plant) => {
-    flowers.push(plant.name);
-  });
-  return flowers.slice(offset);
-}
-
-function getTypefromName(name: string): number {
-  const indexOffset = 2;
-  const uppercasedStrings = name.slice(0, 1).toUpperCase() + name.slice(1);
-  return (
-    getAllFlowerTypes().findIndex((e) => e == uppercasedStrings) + indexOffset
-  );
-}
-
 function checkScenario(scenario: Scenario) {
   //update scenario with current game conditions
-  scenario.updateCurrentConditions(plantsHarvested);
+  scenario.updateCurrentConditions(flowersHarvested);
   //return true or false if victory conditions met
   return scenario.victoryConditionsMet();
 }
