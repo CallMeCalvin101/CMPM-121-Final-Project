@@ -67,10 +67,9 @@ The problem came with trying to fix all of our existing code after messing with 
 Although this cleaning of the code is tedious, it is necessary in order to have a smoother development process down the line. Even when implementing the code and reflecting on it, some of the immediate next steps is to refactor the refactored code since we found out that there are ways to further simplify the code.
 
 # Tony Guizar, Gordon Cai, Vincent Kurniadjaja, Steven Ren, Jane Tran - 12/11/2023
-## F2 Deblog
+## F2 Devlog
 
 ### F0+F1
-The devlog should briefly comment on how the previous F0 and F1 requirements remain satisfied in the latest version of your software. If no major changes were made, you can just simlpy state that no major changes were made. However, if you evolved your design to improve code quality (a good idea!) this section of your devlog entry would be a good place to brag about it.
 We moved some of the helper functions to be class methods in our `Game` class to associate the functions with the `Game` object, as well as reduce the amount of loose functions within the code. In the process, we broke the auto-save functionality of the game, so we had to go back and fix that. These did not affect the overall functionality of F0 and F1. We also added some slight UI changes for the player. We added on-screen controls, as well as a list of the current game requirements and scenarios.. 
 ### F2 External DSL for Scenario Design
 ```
