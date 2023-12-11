@@ -12,7 +12,7 @@ const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
 const testScenario = new Scenario(gameConditions);
 let savedGameStates = new Map<string, GameState[]>();
 
-const MAX_PLANT_GROWTH = 15;
+const MAX_PLANT_GROWTH = 5;
 
 // flowers the player has harvested
 let flowersHarvested: number[] = [];
@@ -539,7 +539,7 @@ export class Game {
 
     //Win Conditions UI
     const victoryConditionUI = document.getElementById("win");
-    victoryConditionUI!.innerHTML = `<strong>Victory Condition: </strong> Plant the following! ${testScenario
+    victoryConditionUI!.innerHTML = `<strong>Victory Condition: </strong> Harvest the following! ${testScenario
       .getVictoryConditions()
       .map((value, index) => `${getPlant(index + 1)!.name}: ${value}`)
       .join(", ")}`; //only works right now since theres only one condition/target
