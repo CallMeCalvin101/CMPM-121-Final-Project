@@ -1,8 +1,11 @@
+import { Game } from "./main";
+
 interface Event {
   time: number;
   name: string;
   row: number;
   col: number;
+  complete: boolean;
 }
 
 interface VictoryConditions {
@@ -42,6 +45,16 @@ export class Scenario {
     return this.starting_conditions;
   }
 
+  // checks event schedule for ready events and then activates them
+  public checkEvents(game: Game) {
+    for (const event of this.events_schedule) {
+      if (!event.complete && this.current_time == event.time) {
+        game.activateEvent(event.name, event.row, event.col);
+        event.complete = true;
+      }
+    }
+  }
+
   public updateCurrentConditions(
     time: number,
     plantsHarvested: number[]
@@ -50,6 +63,12 @@ export class Scenario {
       (value, index) => (this.current_harvest[index] = value)
     );
     this.current_time = time;
+    console.log(
+      "updated current conditions: time: ",
+      time,
+      " plants harvested: ",
+      plantsHarvested
+    );
   }
 
   public victoryConditionsMet(): boolean {

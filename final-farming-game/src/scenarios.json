@@ -2,9 +2,10 @@
     "events_schedule": [
       {
         "time": 2,
-        "name": "RandomGrassGrowth",
+        "name": "WeedGrowth",
         "row": 4,
-        "col": 2
+        "col": 2,
+        "complete": false
         }
     ],
     "starting_conditions": [1, 6],

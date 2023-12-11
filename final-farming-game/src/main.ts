@@ -268,6 +268,31 @@ export class Game {
     }
   }
 
+  activateEvent(name: string, row: number, col: number) {
+    console.log("activating event ", name);
+    if (name == "WeedGrowth") {
+      const gridView = new DataView(this.grid);
+      const byteOffset = (row * this.size + col) * CELL_BYTES;
+      if (weedTypes[0]) {
+        gridView.setUint8(byteOffset, getID(weedTypes[0].name)!);
+        gridView.setUint8(byteOffset + 1, row);
+        gridView.setUint8(byteOffset + 2, col);
+        gridView.setUint8(byteOffset + 3, 0);
+        gridView.setUint8(byteOffset + 4, 0);
+        gridView.setUint8(byteOffset + 5, 0);
+
+        console.log(
+          "EVENT: ",
+          gridView.getUint8(byteOffset),
+          " in row ",
+          gridView.getUint8(byteOffset + 1),
+          " col ",
+          gridView.getUint8(byteOffset + 2)
+        );
+      }
+    }
+  }
+
   undo() {
     if (this.states.length > 1) {
       const currentState = this.states.pop();
@@ -406,13 +431,17 @@ export class Game {
       localStorage.removeItem("savedGames");
       this.states = [];
       this.time = 0;
+      const startConditions = testScenario.getStartingConditions();
+      this.weatherCondition = startConditions[0] == 0 ? "sunny" : "rainy";
+      this.weatherDegree = startConditions[1];
       this.redoStack = [];
       savedGameStates.clear();
       game = new Game(GAME_SIZE);
       farmer = new Character(gameWidth / 2, gameHeight / 2, []);
 
       drawGame();
-      this.updateGame();
+      this.updateUI();
+      this.simulateWeather();
     }
   }
 
@@ -616,7 +645,7 @@ export class Game {
 //------------------------------------ Helper Funcs ------------------------------------------------------------------------------------
 
 // notify observer of change by dispatching a new event
-function notifyChange(name: string) {
+export function notifyChange(name: string) {
   document.dispatchEvent(new Event(name));
 }
 
@@ -712,6 +741,7 @@ function promptPlantSelection(): string {
 function checkScenario(scenario: Scenario) {
   //update scenario with current game conditions
   scenario.updateCurrentConditions(game.time, flowersHarvested);
+  scenario.checkEvents(game);
   //return true or false if victory conditions met
   return scenario.victoryConditionsMet();
 }
