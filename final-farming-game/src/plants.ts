@@ -99,7 +99,7 @@ function getPlantTypes(dslCode: string): Plant[][] {
 //------------------------------------------------------------------------------------------------------
 
 // Example usage:
-// plant [name] [color] [sunReq] [waterReq] [vibeReq: 0-> none, 1->requires alone, 2->requires friends, 3->requires family]
+// flower [name] [color] [sunReq] [waterReq] [vibeReq: 0-> none, 1->requires alone, 2->requires friends, 3->requires family]
 // weed [name] [color] -> [persistence (1-10)] <- this last one not implemented yet
 
 const dslCode = `flower Sunflower yellow 3 2 0
