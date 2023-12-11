@@ -486,6 +486,13 @@ export class Game {
     const controlsUI = document.getElementById("controls");
     controlsUI!.innerHTML = `<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.`;
 
+    //Win Conditions UI
+    const victoryConditionUI = document.getElementById("win");
+    victoryConditionUI!.innerHTML = `<strong>Victory Condition: </strong> Plant the following! ${testScenario
+      .getVictoryConditions()
+      .map((value, index) => `${getAllFlowerTypes()[index]}: ${value}`)
+      .join(", ")}`; //only works right now since theres only one condition/target
+
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed");
     ownedSeedElement!.innerHTML = `<strong>Owned Seeds:</strong> ${getAllFlowerTypes().join(

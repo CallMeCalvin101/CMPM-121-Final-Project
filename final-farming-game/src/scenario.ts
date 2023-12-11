@@ -31,8 +31,8 @@ export class Scenario {
     return this.events_schedule;
   }
 
-  public getVictoryConditions(): VictoryConditions {
-    return this.victory_conditions;
+  public getVictoryConditions(): number[] {
+    return this.victory_conditions.harvest_goal;
   }
 
   public updateCurrentConditions(plantsHarvested: number[]): void {
