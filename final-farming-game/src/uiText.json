@@ -26,5 +26,19 @@
     "plant type": "植物の種類:",
     "water": "水位:",
     "growth": "成長レベル:"
+  },
+  "vietnamese": {
+    "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
+    "day": "Ngày:",
+    "victory": "Điều kiện thắng: Thu hoạch những loại hoa này!",
+    "seeds": "Số lượng hạt giống:",
+    "flowers": "Hoa thu hoạch:",
+    "weather": "Thời tiết:",
+    "severity": "Thiệt hại:",
+    "cell": "Bạn đang ở đây",
+    "no plant": "Đất chưa có hoa trồng",
+    "plant type": "Loại hoa:",
+    "water": "Mực nước:",
+    "growth": "Mức độ tăng trưởng:"
   }
 }
