@@ -1,0 +1,16 @@
+{
+  "english": {
+    "controls": "<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.",
+    "day": "<strong>Day:</strong>",
+    "victory": "<strong>Victory Condition: </strong> Harvest the following!",
+    "seeds": "<strong>Owned Seeds:</strong>",
+    "flowers": "<strong>Harvested Flowers:</strong>",
+    "weather": "<strong>Current Weather:</strong>",
+    "severity": "<strong>Severity:</strong>",
+    "cell": "You are on <strong>cell</strong>",
+    "no plant": "There is no Plant here",
+    "plant type": "<strong>Plant Type:</strong>",
+    "water": "<strong>Water Level:</strong>",
+    "growth": "<strong>Growth Level:<strong>"
+  }
+}
