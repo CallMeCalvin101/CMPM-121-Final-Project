@@ -35,8 +35,11 @@ const availableLanguagesList: availableLanguages[] = [
   "japanese",
   "vietnamese",
 ];
-let curLanguage: number = 0;
-const languageBase: Map<availableLanguages, Map<string, string>> = new Map();
+let curLanguage = 0;
+const languageBase: Map<availableLanguages, Map<string, string>> = new Map<
+  availableLanguages,
+  Map<string, string>
+>();
 
 //------------------------------------ Class def ------------------------------------------------------------------------------------
 interface Cell {
@@ -784,7 +787,7 @@ function parseTranslationsToMap() {
 parseTranslationsToMap();
 
 function localizeText(textKey: string): string {
-  return languageBase.get(availableLanguagesList[curLanguage])?.get(textKey)!;
+  return languageBase.get(availableLanguagesList[curLanguage])!.get(textKey)!;
 }
 
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
