@@ -556,7 +556,7 @@ export class Game {
 
     //Win Conditions UI
     const victoryConditionUI = document.getElementById("win");
-    if (curLanguage != 3) {
+    if (availableLanguagesList[curLanguage] != "arabic") {
       victoryConditionUI!.innerHTML = `${localizeText("victory")} ${testScenario
         .getVictoryConditions()
         .map(
@@ -578,7 +578,7 @@ export class Game {
 
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed")!;
-    if (curLanguage != 3) {
+    if (availableLanguagesList[curLanguage] != "arabic") {
       ownedSeedElement.innerHTML = `${localizeText(
         "seeds",
       )} ${translateFlowerList(flowerTypes.map((flower) => flower.name)).join(
@@ -592,7 +592,7 @@ export class Game {
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
-    if (curLanguage != 3) {
+    if (availableLanguagesList[curLanguage] != "arabic") {
       harvestedPlants!.innerHTML = `${localizeText("flowers")} ${flowerTypes
         .map((flower, index) =>
           [translateFlowerList([flower.name]), flowersHarvested[index]].join(
@@ -612,7 +612,7 @@ export class Game {
 
     //Weather UI
     const weatherElement = document.getElementById("weather")!;
-    if (curLanguage != 3) {
+    if (availableLanguagesList[curLanguage] != "arabic") {
       weatherElement.innerHTML = `${localizeText("weather")} ${localizeText(
         this.weatherCondition,
       )}, ${localizeText("severity")} ${this.weatherDegree}`;
