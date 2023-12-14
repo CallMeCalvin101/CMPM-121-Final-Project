@@ -11,7 +11,13 @@
     "no plant": "There is no Plant here",
     "plant type": "Plant Type:",
     "water": "Water Level:",
-    "growth": "Growth Level:"
+    "growth": "Growth Level:",
+    "sunflower": "Sunflower",
+    "rose": "Rose",
+    "daffodil": "Daffodil",
+    "lily": "Lily",
+    "marigold": "Marigold",
+    "fuchsia": "Fuchsia"
   },
   "japanese": {
     "controls": "コントロール: 矢印キーを動く! スペースキーで諸物を刈り取るとまく。 「T」で暇を費やす。 「S」でセーブする, 「L」でロードする, そして「D」でデータを全部を削除すること。「U」で取り消す,「R」でやり直す。",
@@ -25,7 +31,13 @@
     "no plant": "ここで諸物はない",
     "plant type": "植物の種類:",
     "water": "水位:",
-    "growth": "成長レベル:"
+    "growth": "成長レベル:",
+    "sunflower": "ひまわり",
+    "rose": "バラ",
+    "daffodil": "セッチュウカ",
+    "lily": "リリー",
+    "marigold": "マリーゴールド",
+    "fuchsia": "フクシア "
   },
   "vietnamese": {
     "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
@@ -39,7 +51,13 @@
     "no plant": "Đất chưa có hoa trồng",
     "plant type": "Loại hoa:",
     "water": "Mực nước:",
-    "growth": "Mức độ tăng trưởng:"
+    "growth": "Mức độ tăng trưởng:",
+    "sunflower": "Hoa hướng dương",
+    "rose": "Hoa hồng",
+    "daffodil": "Hoa thuỷ tiên vàng",
+    "lily": "Hoa loa kèn",
+    "marigold": "Giống cúc vàng",
+    "fuchsia": "Hoa vân anh"
   },
   "arabic": {
     "controls": "الضوابط: مفاتيح الأسهم للتحرك! مفتاح المسافة لجني/زرع النبات. تي لتمضية الوقت. S للحفظ، وL للتحميل، وD لحذف جميع البيانات. U للتراجع، R للإعادة.",
@@ -53,6 +71,12 @@
     "no plant": "لا يوجد نبات هنا",
     "plant type": "نوع النبات:",
     "water": "مستوى المياه:",
-    "growth": "مستوى النمو:"
+    "growth": "مستوى النمو:",
+    "sunflower": "Sunflower",
+    "rose": "Rose",
+    "daffodil": "Daffodil",
+    "lily": "Lily",
+    "marigold": "Marigold",
+    "fuchsia": "Fuchsia"
   }
 }

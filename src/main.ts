@@ -552,19 +552,26 @@ export class Game {
     const victoryConditionUI = document.getElementById("win");
     victoryConditionUI!.innerHTML = `${localizeText("victory")} ${testScenario
       .getVictoryConditions()
-      .map((value, index) => `${getPlant(index + 1)!.name}: ${value}`)
+      .map(
+        (value, index) =>
+          `${translateFlowerList([getPlant(index + 1)!.name])}: ${value}`
+      )
       .join(", ")}`; //only works right now since theres only one condition/target
 
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed")!;
-    ownedSeedElement.innerHTML = `${localizeText("seeds")} ${flowerTypes
-      .map((flower) => flower.name)
-      .join(", ")}`;
+    ownedSeedElement.innerHTML = `${localizeText(
+      "seeds"
+    )} ${translateFlowerList(flowerTypes.map((flower) => flower.name)).join(
+      ", "
+    )}`;
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
     harvestedPlants!.innerHTML = `${localizeText("flowers")} ${flowerTypes
-      .map((flower, index) => [flower.name, flowersHarvested[index]].join(": "))
+      .map((flower, index) =>
+        [translateFlowerList([flower.name]), flowersHarvested[index]].join(": ")
+      )
       .join(", ")}`;
 
     //Weather UI
@@ -605,9 +612,9 @@ export class Game {
     if (cell.plant) {
       cellElement!.innerHTML = `${localizeText("cell")} [${cell.rowIndex},${
         cell.colIndex
-      }]. ${localizeText("plant type")} ${
-        getPlant(cell.plant)!.name
-      } ${localizeText("water")} ${cell.waterLevel}. ${localizeText(
+      }]. ${localizeText("plant type")} ${translateFlowerList([
+        getPlant(cell.plant)!.name,
+      ])} ${localizeText("water")} ${cell.waterLevel}. ${localizeText(
         "growth"
       )} ${cell.growthLevel}`;
     } else {
@@ -785,6 +792,14 @@ parseTranslationsToMap();
 
 function localizeText(textKey: string): string {
   return languageBase.get(availableLanguagesList[curLanguage])?.get(textKey)!;
+}
+
+function translateFlowerList(flowerNames: string[]): string[] {
+  const translatedNames: string[] = [];
+  flowerNames.forEach((flower) => {
+    translatedNames.push(localizeText(flower.toLowerCase()));
+  });
+  return translatedNames;
 }
 
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
