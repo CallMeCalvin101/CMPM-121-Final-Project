@@ -160,7 +160,7 @@ Our team’s plan has not changed very significantly. With every design requirem
 
 ## How we satisfied the software requirements
 ### F0+F1+F2
-No major changes were made to satisfy the past requirements.
+No major changes were needed to satisfy the past requirements.
 
 ### Internationalization
 We first started internationalization by looking into which parts of our game were already in english. Most of the text that were in the game already were all of the UI elements as well as the prompts that popped up whenever the player hit the spacebar. We first planned to enable internationalization by creating a JSON file that stored all of the strings we used in the game in english, and later created sections for the other 3 languages that we will be using inside the game. This JSON file is structured so that it will first select the language, and then within each language are the keys to the different string types that are then translated to their respective language.
