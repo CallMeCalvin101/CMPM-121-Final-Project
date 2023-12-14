@@ -63,6 +63,11 @@ h1 {
   flex-direction: column;
 }
 
+#top-left button {
+  width: 9em;
+  align-self: center;
+}
+
 #inner-row {
   display: flex;
   flex-direction: row;
