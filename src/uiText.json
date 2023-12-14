@@ -17,7 +17,9 @@
     "daffodil": "Daffodil",
     "lily": "Lily",
     "marigold": "Marigold",
-    "fuchsia": "Fuchsia"
+    "fuchsia": "Fuchsia",
+    "rainy": "Rainy",
+    "sunny": "Sunny"
   },
   "japanese": {
     "controls": "コントロール: 矢印キーを動く! スペースキーで諸物を刈り取るとまく。 「T」で暇を費やす。 「S」でセーブする, 「L」でロードする, そして「D」でデータを全部を削除すること。「U」で取り消す,「R」でやり直す。",
@@ -37,7 +39,9 @@
     "daffodil": "セッチュウカ",
     "lily": "リリー",
     "marigold": "マリーゴールド",
-    "fuchsia": "フクシア "
+    "fuchsia": "フクシア ",
+    "rainy": "雨天",
+    "sunny": "晴天"
   },
   "vietnamese": {
     "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
@@ -57,7 +61,9 @@
     "daffodil": "Hoa thuỷ tiên vàng",
     "lily": "Hoa loa kèn",
     "marigold": "Giống cúc vàng",
-    "fuchsia": "Hoa vân anh"
+    "fuchsia": "Hoa vân anh",
+    "rainy": "Nhiều mưa",
+    "sunny": "Nhiều nắng"
   },
   "arabic": {
     "controls": "الضوابط: مفاتيح الأسهم للتحرك! مفتاح المسافة لجني/زرع النبات. تي لتمضية الوقت. S للحفظ، وL للتحميل، وD لحذف جميع البيانات. U للتراجع، R للإعادة.",
@@ -77,6 +83,8 @@
     "daffodil": "Daffodil",
     "lily": "Lily",
     "marigold": "Marigold",
-    "fuchsia": "Fuchsia"
+    "fuchsia": "Fuchsia",
+    "rainy": "Rainy",
+    "sunny": "Sunny"
   }
 }

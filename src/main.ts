@@ -576,10 +576,9 @@ export class Game {
 
     //Weather UI
     const weatherElement = document.getElementById("weather")!;
-    weatherElement.innerHTML = `${localizeText("weather")} ${
-      this.weatherCondition.charAt(0).toUpperCase() +
-      this.weatherCondition.slice(1)
-    }, ${localizeText("severity")} ${this.weatherDegree}`;
+    weatherElement.innerHTML = `${localizeText("weather")} ${localizeText(
+      this.weatherCondition
+    )}, ${localizeText("severity")} ${this.weatherDegree}`;
   }
 
   //update water and sun levels for all plants on grid
