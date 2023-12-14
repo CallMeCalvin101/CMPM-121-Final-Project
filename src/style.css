@@ -52,6 +52,13 @@ h1 {
   justify-content: center;
 }
 
+.side-column button {
+  padding: 0px;
+  font-size: 1em;
+  padding: 4px;
+  height: 2em;
+}
+
 #top-left {
   width: 100%;
   max-width: 10em;
@@ -71,9 +78,19 @@ h1 {
 #inner-row {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: space-evenly;
   align-items: center;
   text-align: center;
+}
+
+#interact {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-radius: 30% 0% 30% 0%;
+  font-size: 2.5em;
 }
 
 .inner-col {
@@ -82,6 +99,7 @@ h1 {
   justify-content: center;
   align-items: center;
   text-align: center;
+
 
 }
 
@@ -96,6 +114,7 @@ h1 {
   align-items: center;
   margin-top: 20px;
   margin-bottom: 20px;
+  margin-right: 10px;
   background-color: #2a2a2a;
   border-radius: 30% 0% 30% 0%;
 }
@@ -108,7 +127,7 @@ h1 {
   margin: 1em;
   background-color: #2a2a2a;
   border-radius: 30% 0% 30% 0%;
-  width: 10em;
+  width: 14em;
 }
 
 .button-col {
@@ -122,20 +141,17 @@ h1 {
 }
 
 .button-col button {
-  width: 5em;
-  height: 2em;
-  font-size: 1em;
-  margin: 0.1em;
-  padding: 0.1em;
+  width: 4.5em;
+  height: 2.5em;
+  margin: 0.7em;
 
 }
 
 #game-controls button {
   width: 2em;
   height: 2em;
-  font-size: 2em;
+  font-size: 2.4em;
   margin: 0.1em;
-  padding: 0.1em;
 }
 
 #row-controls {
@@ -234,12 +250,24 @@ button:focus-visible {
 
   .side-column {
     width: 100px;
-    margin: 10px;
+    margin: 5px;
+  }
+
+  #game-buttons {
+    margin: 0px;
   }
 
   #app {
     width: 100vw;
     align-items: center;
     justify-content: center;
+  }
+
+  #inner-row button {
+    font-size: 1.8em;
+  }
+
+  #top-left button {
+    margin: 0px;
   }
 }
