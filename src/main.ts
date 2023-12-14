@@ -451,7 +451,7 @@ export class Game {
   // delete local storage game data and start game over
   deleteLocalStorage() {
     if (
-      confirm("Are you sure you want to delete all game data and start over?")
+      confirm(`${localizeText("delete")}`)
     ) {
       localStorage.removeItem("states");
       localStorage.removeItem("savedGames");
@@ -473,7 +473,8 @@ export class Game {
 
   // save current game state to list of saved game states + store saved game states in localstorage
   manualSave() {
-    const input = prompt("Enter a name for your save file (optional) : ");
+    const saveText = `${localizeText("save")}`;
+    const input = prompt(saveText);
     if (input == null) return; //exit if no input
     const saveName = input == "" ? `saved_${getCurrentDateTime()}` : input; //default name if input is empty
 
@@ -481,7 +482,13 @@ export class Game {
       saveName,
       this.states.map((state) => this.cloneGameState(state))
     );
-    alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
+    const savedOne = `${localizeText("saved1")}`;
+    const savedTwo = `${localizeText("saved2")}`;
+    if (availableLanguagesList[curLanguage] != "arabic") {
+      alert(`${savedOne}  ${saveName} ${savedTwo}`);
+    } else {
+      alert(`${savedOne} .${saveName} ${savedTwo}`);
+    }
 
     const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<
       string,
@@ -506,7 +513,7 @@ export class Game {
 
   //prompts the user to enter the save state which they want to load
   loadSavedGame() {
-    let promptText = `Please enter the number next to the save state you want to load.`;
+    let promptText = `${localizeText("load")}`;
     const stateArray = Array.from(savedGameStates.entries());
 
     let index = 1;
