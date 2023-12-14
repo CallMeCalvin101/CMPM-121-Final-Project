@@ -1,12 +1,12 @@
 {
   "name": "Farming Simulator",
   "short_name": "Farm Sim",
-  "start_url": "/CMPM-121-Final-Project/index.html",
+  "start_url": "/",
   "display": "standalone",
   "prefer_related_applications": false,
   "background_color": "#FFE9D2",
   "theme_color": "#FFE1C4",
-  "orientation": "portrait-primary",
+  "orientation": "landscape-primary",
   "icons": [
     {
       "src": "img/icon72.png",
