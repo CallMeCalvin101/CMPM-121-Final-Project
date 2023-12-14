@@ -1,37 +1,37 @@
 {
-    "name": "Farming Simulator",
-    "short_name": "Farm Sim",
-    "start_url": "/CMPM-121-Final-Project/index.html",
-    "display": "standalone",
-    "prefer_related_applications": false,
-    "background_color": "#FFE9D2",
-    "theme_color": "#FFE1C4",
-    "orientation": "portrait-primary",
-    "icons": [
-        {
-          "src": "img/icon72.png",
-          "sizes": "72x72",
-          "purpose": "any maskable"
-        },
-        {
-          "src": "img/icon96.png",
-          "sizes": "96x96",
-          "purpose": "any maskable"
-        },
-        {
-          "src": "img/icon144.png",
-          "sizes": "144x144",
-          "purpose": "any maskable"
-        },
-        {
-          "src": "img/icon192.png",
-          "sizes": "192x192",
-          "purpose": "any maskable"
-        },
-        {
-          "src": "img/icon512.png",
-          "sizes": "512x512",
-          "purpose": "any maskable"
-        }
-      ]
-  }
+  "name": "Farming Simulator",
+  "short_name": "Farm Sim",
+  "start_url": "/CMPM-121-Final-Project/index.html",
+  "display": "standalone",
+  "prefer_related_applications": false,
+  "background_color": "#FFE9D2",
+  "theme_color": "#FFE1C4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "img/icon72.png",
+      "sizes": "72x72",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon96.png",
+      "sizes": "96x96",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon144.png",
+      "sizes": "144x144",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon192.png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon512.png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}
