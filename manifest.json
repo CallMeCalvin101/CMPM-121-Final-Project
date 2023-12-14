@@ -1,7 +1,7 @@
 {
   "name": "Farming Simulator",
   "short_name": "Farm Sim",
-  "start_url": "/index.html",
+  "start_url": "/",
   "display": "standalone",
   "prefer_related_applications": false,
   "background_color": "#FFE9D2",
