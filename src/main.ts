@@ -626,11 +626,17 @@ export class Game {
         this.weatherCondition
       )}, ${localizeText("severity")} ${this.weatherDegree}`;
     } else {
-      weatherElement.innerHTML = `${localizeText(
-        this.weatherCondition
-      )} ${localizeText("weather")}, ${this.weatherDegree} ${localizeText(
+      weatherElement.innerHTML = `${this.weatherDegree} ${localizeText(
         "severity"
-      )}`;
+      )} \u202A,\u202A ${localizeText(
+        this.weatherCondition
+      )} ${localizeText("weather")}`;
+      /*
+      weatherElement.innerHTML = `${this.weatherDegree} ${localizeText(
+        "severity"
+      )} , ${localizeText(
+        this.weatherCondition
+      )} ${localizeText("weather")}`;*/
     }
   }
 
