@@ -358,11 +358,13 @@ export class Game {
   //removes a plant from current cell
   reapPlant(currentCell: Cell) {
     const confirmReap = window.confirm(
-      `Do you want to reap the ${
-        getPlant(currentCell.plant)!.name
-      } plant?\nDetails:\nSun Level: ${currentCell.sunLevel}, Water Level: ${
-        currentCell.waterLevel
-      }, Growth Level: ${currentCell.growthLevel}`
+      `${localizeText("reap prompt")} ${localizeText(
+        getPlant(currentCell.plant)!.name.toLowerCase()
+      )} \n${localizeText("sun")} ${currentCell.sunLevel}, ${localizeText(
+        "water"
+      )} ${currentCell.waterLevel}, ${localizeText("growth")} ${
+        currentCell.growthLevel
+      }`
     );
 
     if (!confirmReap) return;
@@ -752,8 +754,10 @@ function drawGame() {
 }
 
 function promptPlantSelection(): string {
-  const plantNames = flowerTypes.map((flower) => flower.name).join(", ");
-  const promptText = `What would you like to plant?\nAvailable plants: ${plantNames}`;
+  const plantNames = translateFlowerList(
+    flowerTypes.map((flower) => flower.name)
+  ).join(", ");
+  const promptText = `${localizeText("plant prompt")} ${plantNames}`;
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
 }
 

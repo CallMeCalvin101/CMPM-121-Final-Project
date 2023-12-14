@@ -10,6 +10,7 @@
     "cell": "You are on cell",
     "no plant": "There is no Plant here",
     "plant type": "Plant Type:",
+    "sun": "Sun Level:",
     "water": "Water Level:",
     "growth": "Growth Level:",
     "sunflower": "Sunflower",
@@ -19,7 +20,9 @@
     "marigold": "Marigold",
     "fuchsia": "Fuchsia",
     "rainy": "Rainy",
-    "sunny": "Sunny"
+    "sunny": "Sunny",
+    "plant prompt": "What would you like to plant? Available plants:\n",
+    "reap prompt": "Do you want to reap the"
   },
   "japanese": {
     "controls": "コントロール: 矢印キーを動く! スペースキーで諸物を刈り取るとまく。 「T」で暇を費やす。 「S」でセーブする, 「L」でロードする, そして「D」でデータを全部を削除すること。「U」で取り消す,「R」でやり直す。",
@@ -32,6 +35,7 @@
     "cell": "セルの上にいる",
     "no plant": "ここで諸物はない",
     "plant type": "植物の種類:",
+    "sun": "Sun Level:",
     "water": "水位:",
     "growth": "成長レベル:",
     "sunflower": "ひまわり",
@@ -41,7 +45,9 @@
     "marigold": "マリーゴールド",
     "fuchsia": "フクシア ",
     "rainy": "雨天",
-    "sunny": "晴天"
+    "sunny": "晴天",
+    "plant prompt": "What would you like to plant? Available plants:\n",
+    "reap prompt": "Do you want to reap the"
   },
   "vietnamese": {
     "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
@@ -54,6 +60,7 @@
     "cell": "Bạn đang ở tại điểm",
     "no plant": "Đất chưa có hoa trồng",
     "plant type": "Loại hoa:",
+    "sun": "Sun Level:",
     "water": "Mực nước:",
     "growth": "Mức độ tăng trưởng:",
     "sunflower": "Hoa hướng dương",
@@ -63,7 +70,9 @@
     "marigold": "Giống cúc vàng",
     "fuchsia": "Hoa vân anh",
     "rainy": "Nhiều mưa",
-    "sunny": "Nhiều nắng"
+    "sunny": "Nhiều nắng",
+    "plant prompt": "What would you like to plant? Available plants:\n",
+    "reap prompt": "Do you want to reap the"
   },
   "arabic": {
     "controls": "الضوابط: مفاتيح الأسهم للتحرك! مفتاح المسافة لجني/زرع النبات. تي لتمضية الوقت. S للحفظ، وL للتحميل، وD لحذف جميع البيانات. U للتراجع، R للإعادة.",
@@ -76,6 +85,7 @@
     "cell": "أنت على الخلية",
     "no plant": "لا يوجد نبات هنا",
     "plant type": "نوع النبات:",
+    "sun": "Sun Level:",
     "water": "مستوى المياه:",
     "growth": "مستوى النمو:",
     "sunflower": "Sunflower",
@@ -85,6 +95,8 @@
     "marigold": "Marigold",
     "fuchsia": "Fuchsia",
     "rainy": "Rainy",
-    "sunny": "Sunny"
+    "sunny": "Sunny",
+    "plant prompt": "What would you like to plant? Available plants:\n",
+    "reap prompt": "Do you want to reap the"
   }
 }
