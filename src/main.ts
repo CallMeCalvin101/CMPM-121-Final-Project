@@ -362,7 +362,7 @@ export class Game {
   //removes a plant from current cell
   reapPlant(currentCell: Cell) {
     let confirmReap;
-    if(availableLanguagesList[curLanguage] != "arabic"){
+    if (availableLanguagesList[curLanguage] != "arabic") {
       confirmReap = window.confirm(
         `${localizeText("reap prompt")} ${localizeText(
           getPlant(currentCell.plant)!.name.toLowerCase(),
@@ -372,9 +372,15 @@ export class Game {
           currentCell.growthLevel
         }`,
       );
-    }else{
+    } else {
       confirmReap = window.confirm(
-        `${currentCell.growthLevel} ${localizeText("growth")}, ${currentCell.waterLevel} ${localizeText("water",)}, ${currentCell.sunLevel} ${localizeText("sun")}\n ${localizeText(getPlant(currentCell.plant)!.name.toLowerCase(),)} ${localizeText("reap prompt")}`,
+        `${currentCell.growthLevel} ${localizeText("growth")}, ${
+          currentCell.waterLevel
+        } ${localizeText("water")}, ${currentCell.sunLevel} ${localizeText(
+          "sun",
+        )}\n ${localizeText(
+          getPlant(currentCell.plant)!.name.toLowerCase(),
+        )} ${localizeText("reap prompt")}`,
       );
     }
 
@@ -669,19 +675,26 @@ export class Game {
         ])} ${localizeText("water")} ${cell.waterLevel}. ${localizeText(
           "growth",
         )} ${cell.growthLevel}`;
-      }else{
+      } else {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        cellElement!.innerHTML = `${cell.growthLevel} ${localizeText("water")} ${cell.waterLevel}. ${localizeText("growth",)} ${translateFlowerList([getPlant(cell.plant)!.name,])} ${localizeText("plant type")} .[${cell.rowIndex},${cell.colIndex}] ${localizeText("cell")}`;
+        cellElement!.innerHTML = `${cell.growthLevel} ${localizeText(
+          "water",
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        )} ${cell.waterLevel}. ${localizeText("growth")} ${translateFlowerList([
+          getPlant(cell.plant)!.name,
+        ])} ${localizeText("plant type")} .[${cell.rowIndex},${
+          cell.colIndex
+        }] ${localizeText("cell")}`;
       }
     } else {
       if (availableLanguagesList[curLanguage] != "arabic") {
         cellElement!.innerHTML = `${localizeText("cell")} [${cell.rowIndex},${
           cell.colIndex
         }], ${localizeText("no plant")}`;
-      }else{
-        cellElement!.innerHTML = `${localizeText("no plant")}, [${cell.rowIndex},${
-          cell.colIndex
-        }] ${localizeText("cell")}`;
+      } else {
+        cellElement!.innerHTML = `${localizeText("no plant")}, [${
+          cell.rowIndex
+        },${cell.colIndex}] ${localizeText("cell")}`;
       }
     }
   }
@@ -819,9 +832,9 @@ function promptPlantSelection(): string {
     flowerTypes.map((flower) => flower.name),
   ).join(", ");
   let promptText;
-  if(availableLanguagesList[curLanguage] != "arabic"){
+  if (availableLanguagesList[curLanguage] != "arabic") {
     promptText = `${localizeText("plant prompt")} ${plantNames}`;
-  }else{
+  } else {
     promptText = `${plantNames} ${localizeText("plant prompt")}`;
   }
   return prompt(promptText) ?? ""; // Prompt the player for the plant name
