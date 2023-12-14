@@ -24,7 +24,11 @@
     "sunny": "Sunny",
     "plant prompt": "What would you like to plant? Available plants:\n",
     "reap prompt": "Do you want to reap the",
-    "change language": "Change Language"
+    "change language": "Change Language",
+    "save": "Enter a name for your save file (optional) :",
+    "saved1": "Game saved as ",
+    "saved2": ".\nPress \"L\" key to load a saved game.",
+    "load": "Please enter the number next to the save state you want to load."
   },
   "japanese": {
     "controls": "コントロール: 矢印キーを動く! スペースキーで諸物を刈り取るとまく。 「T」で暇を費やす。 「S」でセーブする, 「L」でロードする, そして「D」でデータを全部を削除すること。「U」で取り消す,「R」でやり直す。",
@@ -51,7 +55,11 @@
     "sunny": "晴天",
     "plant prompt": "何を蒔いていいか。可用な植物:\n",
     "reap prompt": "を刈り取りたいか。",
-    "change language":"言語変更"
+    "change language": "言語変更",
+    "save": "保存ファイルの名前を入力して下さい（オプション）：",
+    "saved1": "ファイルの名前は ",
+    "saved2": "保存した。\n 保存したゲームをロードするには、[L]を押して下さい。",
+    "load": "保存ファイルの番号を押し下さい。"
   },
   "vietnamese": {
     "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
@@ -78,7 +86,11 @@
     "sunny": "Nhiều nắng",
     "plant prompt": "Bạn muốn trồng gì? Cây có sẵn:\n",
     "reap prompt": "Bạn có muốn gặt hái",
-    "change language": "Thay đổi ngôn ngữ"
+    "change language": "Thay đổi ngôn ngữ",
+    "save": "Nhập tên cho tệp lưu của bạn (tùy chọn):",
+    "saved1": "Trò chơi được lưu dưới dạng",
+    "saved2": ".\nNhấn phím \"L\" để tải trò chơi đã lưu.",
+    "load": "Vui lòng nhập số bên cạnh trạng thái lưu mà bạn muốn tải."
   },
   "arabic": {
     "controls": "الضوابط: مفاتيح الأسهم للتحرك! مفتاح المسافة لجني/زرع النبات. تي لتمضية الوقت. S للحفظ، وL للتحميل، وD لحذف جميع البيانات. U للتراجع، R للإعادة.",
@@ -105,6 +117,10 @@
     "sunny": "مشمس",
     "plant prompt": ":النباتات المتاحة.ماذا تريد أن تزرع؟",
     "reap prompt": "هل تريد أن تجني",
-    "change language":"تغيير اللغة"
+    "change language": "تغيير اللغة",
+    "save": ":أدخل اسمًا لملف الحفظ الخاص بك (اختياري)",
+    "saved1": "\n.اضغط على مفتاح \"L\" لتحميل لعبة محفوظة",
+    "saved2": "تم حفظ اللعبة باسم ",
+    "load": "الرجاء إدخال الرقم الموجود بجوار حالة الحفظ التي تريد تحميلها."
   }
 }

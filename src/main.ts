@@ -477,7 +477,8 @@ export class Game {
 
   // save current game state to list of saved game states + store saved game states in localstorage
   manualSave() {
-    const input = prompt("Enter a name for your save file (optional) : ");
+    const saveText = `${localizeText("save")}`;
+    const input = prompt(saveText);
     if (input == null) return; //exit if no input
     const saveName = input == "" ? `saved_${getCurrentDateTime()}` : input; //default name if input is empty
 
@@ -485,7 +486,13 @@ export class Game {
       saveName,
       this.states.map((state) => this.cloneGameState(state)),
     );
-    alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
+    const savedOne = `${localizeText("saved1")}`;
+    const savedTwo = `${localizeText("saved2")}`;
+    if (availableLanguagesList[curLanguage] != "arabic") {
+      alert(`${savedOne}  ${saveName} ${savedTwo}`);
+    } else {
+      alert(`${savedOne} .${saveName} ${savedTwo}`);
+    }
 
     const encodedSavedGameStates: Map<string, EncodedState[]> = new Map<
       string,
@@ -510,7 +517,7 @@ export class Game {
 
   //prompts the user to enter the save state which they want to load
   loadSavedGame() {
-    let promptText = `Please enter the number next to the save state you want to load.`;
+    let promptText = `${localizeText("load")}`;
     const stateArray = Array.from(savedGameStates.entries());
 
     let index = 1;
@@ -679,7 +686,7 @@ export class Game {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         cellElement!.innerHTML = `${cell.growthLevel} ${localizeText(
           "water",
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         )} ${cell.waterLevel}. ${localizeText("growth")} ${translateFlowerList([
           getPlant(cell.plant)!.name,
         ])} ${localizeText("plant type")} .[${cell.rowIndex},${
@@ -967,10 +974,10 @@ function changeLanguage() {
 }
 
 const languageButton = document.getElementById("languageButton")!;
-languageButton.innerHTML=`${localizeText("change language")}`;
+languageButton.innerHTML = `${localizeText("change language")}`;
 languageButton.addEventListener("click", () => {
   changeLanguage();
-  languageButton.innerHTML=`${localizeText("change language")}`;
+  languageButton.innerHTML = `${localizeText("change language")}`;
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
