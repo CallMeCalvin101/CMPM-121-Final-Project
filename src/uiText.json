@@ -23,11 +23,17 @@
     "rainy": "Rainy",
     "sunny": "Sunny",
     "plant prompt": "What would you like to plant? Available plants:\n",
-    "reap prompt": "Do you want to reap the"
+    "reap prompt": "Do you want to reap the",
+    "change language": "Change Language",
+    "save": "Enter a name for your save file (optional) :",
+    "saved1": "Game saved as ",
+    "saved2": ".\nPress \"L\" key to load a saved game.",
+    "load": "Please enter the number next to the save state you want to load.",
+    "delete": "Are you sure you want to delete all game data and start over?"
   },
   "japanese": {
     "controls": "コントロール: 矢印キーを動く! スペースキーで諸物を刈り取るとまく。 「T」で暇を費やす。 「S」でセーブする, 「L」でロードする, そして「D」でデータを全部を削除すること。「U」で取り消す,「R」でやり直す。",
-    "day": "曜日:",
+    "day": "月の日:",
     "victory": "勝利のじょうけん：以下を取り入れる!",
     "seeds": "所有している種子:",
     "flowers": "取り入れた花:",
@@ -49,8 +55,15 @@
     "rainy": "雨天",
     "sunny": "晴天",
     "plant prompt": "何を蒔いていいか。可用な植物:\n",
-    "reap prompt": "を刈り取りたいか。"
+    "reap prompt": "を刈り取りたいか。",
+    "change language": "言語変更",
+    "save": "保存ファイルの名前を入力して下さい（オプション）：",
+    "saved1": "ファイルの名前は ",
+    "saved2": "保存した。\n 保存したゲームをロードするには、[L]を押して下さい。",
+    "load": "保存ファイルの番号を押し下さい。",
+    "delete": "本当にゲームデータをすべて削除して、最初からやり直したいのか？"
   },
+
   "vietnamese": {
     "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
     "day": "Ngày:",
@@ -62,20 +75,26 @@
     "cell": "Bạn đang ở tại điểm",
     "no plant": "Đất chưa có hoa trồng",
     "plant type": "Loại hoa:",
-    "sun": "Sun Level:",
+    "sun": "Cấp độ nắng:",
     "water": "Mực nước:",
     "growth": "Mức độ tăng trưởng:",
     "sunflower": "Hoa hướng dương",
     "rose": "Hoa hồng",
     "daffodil": "Hoa thuỷ tiên vàng",
-    "lily": "Hoa loa kèn",
-    "marigold": "Giống cúc vàng",
-    "fuchsia": "Hoa vân anh",
-    "crabgrass": "Crabgrass",
-    "rainy": "Nhiều mưa",
-    "sunny": "Nhiều nắng",
-    "plant prompt": "What would you like to plant? Available plants:\n",
-    "reap prompt": "Do you want to reap the"
+    "lily": "Hoa ly",
+    "marigold": "Cúc vạn thọ",
+    "fuchsia": "Hoa lồng đèn",
+    "crabgrass": "Cỏ dại",
+    "rainy": "Mưa nhiều",
+    "sunny": "Nắng nóng",
+    "plant prompt": "Bạn muốn trồng hoa gì? Các loại hoa đang có:\n",
+    "reap prompt": "Bạn muốn gặt hoa",
+    "change language": "Thay đổi ngôn ngữ",
+    "save": "Nhập tên cho tệp lưu của bạn (tùy chọn):",
+    "saved1": "Trò chơi được lưu dưới dạng",
+    "saved2": ".\nNhấn phím \"L\" để tải trò chơi đã lưu.",
+    "load": "Vui lòng nhập số bên cạnh trạng thái lưu mà bạn muốn tải.",
+    "delete": "Bạn có chắc chắn muốn xóa tất cả dữ liệu trò chơi và bắt đầu lại không?"
   },
   "arabic": {
     "controls": "الضوابط: مفاتيح الأسهم للتحرك! مفتاح المسافة لجني/زرع النبات. تي لتمضية الوقت. S للحفظ، وL للتحميل، وD لحذف جميع البيانات. U للتراجع، R للإعادة.",
@@ -101,6 +120,12 @@
     "rainy": "ماطر",
     "sunny": "مشمس",
     "plant prompt": ":النباتات المتاحة.ماذا تريد أن تزرع؟",
-    "reap prompt": "هل تريد أن تجني"
+    "reap prompt": "هل تريد أن تجني",
+    "change language": "تغيير اللغة",
+    "save": "أدخل اسمًا لملف الحفظ الخاص بك (اختياري):",
+    "saved1": "\n.اضغط على مفتاح \"L\" لتحميل لعبة محفوظة",
+    "saved2": "تم حفظ اللعبة باسم ",
+    "load": "الرجاء إدخال الرقم الموجود بجوار حالة الحفظ التي تريد تحميلها.",
+    "delete": "هل أنت متأكد أنك تريد حذف جميع بيانات اللعبة والبدء من جديد؟"
   }
 }
