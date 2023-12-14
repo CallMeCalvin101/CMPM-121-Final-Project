@@ -30,7 +30,7 @@ h1 {
 }
 
 #app {
-  width: 90vw;
+  width: 95vw;
   height: 90vh;
   margin: 0 auto;
   padding: 20px;
@@ -150,13 +150,21 @@ canvas {
   height: 500px;
 }
 
-#center-column {
+#center-container {
   width: 500px;
   margin: 0 auto;
   padding: 0px;
   display: flex;
   flex-direction: column;
   align-items: center;
+
+}
+
+#center-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .ui {
@@ -213,5 +221,35 @@ button:focus-visible {
 
   button {
     background-color: #f9f9f9;
+  }
+}
+
+@media (max-width: 875px) {
+  :root {
+    font-size: 10px;
+  }
+
+  canvas {
+    width: 250px;
+    height: 250px;
+  }
+
+  #center-container {
+    width: 250px;
+  }
+
+  #controls {
+    display: none;
+  }
+
+  .side-column {
+    width: 100px;
+    margin: 10px;
+  }
+
+  #app {
+    width: 100vw;
+    align-items: center;
+    justify-content: center;
   }
 }

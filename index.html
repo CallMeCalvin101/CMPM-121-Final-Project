@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
     <title>Farming Simulator</title>
     <link rel="stylesheet" href="src/style.css" />
     <!-- manifest -->
@@ -48,11 +49,12 @@
         </div>
       </div>
       <div id="center-column">
-        <p id="controls" class="ui">Controls</p>
-        <canvas id="game" width="700" height="700"></canvas>
-        <p id="weather" class="ui">Current Weather:</p>
-        <p id="plants" class="ui">Harvested Plants</p>
-        
+        <div id="center-container">
+          <p id="controls" class="ui">Controls</p>
+          <canvas id="game" width="700" height="700"></canvas>
+          <p id="weather" class="ui">Current Weather:</p>
+          <p id="plants" class="ui">Harvested Plants</p>
+        </div>
       </div>
       <div class="side-column">
         <div id="ui-container">
