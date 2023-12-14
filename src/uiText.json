@@ -45,11 +45,11 @@
     "lily": "リリー",
     "marigold": "マリーゴールド",
     "fuchsia": "フクシア ",
-    "crabgrass": "Crabgrass",
+    "crabgrass": "メヒシバ",
     "rainy": "雨天",
     "sunny": "晴天",
-    "plant prompt": "What would you like to plant? Available plants:\n",
-    "reap prompt": "Do you want to reap the"
+    "plant prompt": "何を蒔いていいか。可用な植物:\n",
+    "reap prompt": "を刈り取りたいか。"
   },
   "vietnamese": {
     "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
@@ -88,19 +88,19 @@
     "cell": "أنت على الخلية",
     "no plant": "لا يوجد نبات هنا",
     "plant type": ":نوع النبات",
-    "sun": "Sun Level:",
+    "sun": ":مستوى الشمس",
     "water": ":مستوى المياه",
     "growth": ":مستوى النمو",
-    "sunflower": "Sunflower",
-    "rose": "Rose",
-    "daffodil": "Daffodil",
-    "lily": "Lily",
-    "marigold": "Marigold",
-    "fuchsia": "Fuchsia",
-    "crabgrass": "Crabgrass",
-    "rainy": "Rainy",
-    "sunny": "Sunny",
-    "plant prompt": "What would you like to plant? Available plants:\n",
-    "reap prompt": "Do you want to reap the"
+    "sunflower": "دوار الشمس",
+    "rose": "وَردَة",
+    "daffodil": "النرجس البري",
+    "lily": "زنبق",
+    "marigold": "القطيفة",
+    "fuchsia": "ضارب الى الحمرة",
+    "crabgrass": "كرابجراس",
+    "rainy": "ماطر",
+    "sunny": "مشمس",
+    "plant prompt": ":النباتات المتاحة.ماذا تريد أن تزرع؟",
+    "reap prompt": "هل تريد أن تجني"
   }
 }
