@@ -631,12 +631,6 @@ export class Game {
       )} \u202A,\u202A ${localizeText(
         this.weatherCondition
       )} ${localizeText("weather")}`;
-      /*
-      weatherElement.innerHTML = `${this.weatherDegree} ${localizeText(
-        "severity"
-      )} , ${localizeText(
-        this.weatherCondition
-      )} ${localizeText("weather")}`;*/
     }
   }
 
