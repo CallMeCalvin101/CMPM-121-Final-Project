@@ -610,13 +610,13 @@ export class Game {
         )
         .join(", ")}`;
     } else {
-      harvestedPlants!.innerHTML = `${flowerTypes
+      harvestedPlants!.innerHTML = `\u202A${flowerTypes
         .map((flower, index) =>
           [translateFlowerList([flower.name]), flowersHarvested[index]].join(
             ": "
           )
         )
-        .join(", ")} ${localizeText("flowers")}`;
+        .join(", ")}\u202A \u202A${localizeText("flowers")}`;
     }
 
     //Weather UI
