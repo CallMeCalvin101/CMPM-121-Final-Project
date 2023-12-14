@@ -23,7 +23,8 @@
     "rainy": "Rainy",
     "sunny": "Sunny",
     "plant prompt": "What would you like to plant? Available plants:\n",
-    "reap prompt": "Do you want to reap the"
+    "reap prompt": "Do you want to reap the",
+    "change language": "Change Language"
   },
   "japanese": {
     "controls": "コントロール: 矢印キーを動く! スペースキーで諸物を刈り取るとまく。 「T」で暇を費やす。 「S」でセーブする, 「L」でロードする, そして「D」でデータを全部を削除すること。「U」で取り消す,「R」でやり直す。",
@@ -49,7 +50,8 @@
     "rainy": "雨天",
     "sunny": "晴天",
     "plant prompt": "何を蒔いていいか。可用な植物:\n",
-    "reap prompt": "を刈り取りたいか。"
+    "reap prompt": "を刈り取りたいか。",
+    "change language":"言語変更"
   },
   "vietnamese": {
     "controls": "Điều khiển: Nhấn phím mũi tên để di chuyển! Nhấn phím cách để gặt/gieo hoa. Nhấn T để tăng suất quá trình cây tăng trưởng. Nhấn S để lưu, nhấn L để tải về và D để xóa tất cả dữ liệu. Nhấn U để khôi phục và R để lặp lại.",
@@ -75,7 +77,8 @@
     "rainy": "Nhiều mưa",
     "sunny": "Nhiều nắng",
     "plant prompt": "What would you like to plant? Available plants:\n",
-    "reap prompt": "Do you want to reap the"
+    "reap prompt": "Do you want to reap the",
+    "change language": "Change Language"
   },
   "arabic": {
     "controls": "الضوابط: مفاتيح الأسهم للتحرك! مفتاح المسافة لجني/زرع النبات. تي لتمضية الوقت. S للحفظ، وL للتحميل، وD لحذف جميع البيانات. U للتراجع، R للإعادة.",
@@ -101,6 +104,7 @@
     "rainy": "ماطر",
     "sunny": "مشمس",
     "plant prompt": ":النباتات المتاحة.ماذا تريد أن تزرع؟",
-    "reap prompt": "هل تريد أن تجني"
+    "reap prompt": "هل تريد أن تجني",
+    "change language":"تغيير اللغة"
   }
 }

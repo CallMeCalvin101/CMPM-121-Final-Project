@@ -967,8 +967,10 @@ function changeLanguage() {
 }
 
 const languageButton = document.getElementById("languageButton")!;
+languageButton.innerHTML=`${localizeText("change language")}`;
 languageButton.addEventListener("click", () => {
   changeLanguage();
+  languageButton.innerHTML=`${localizeText("change language")}`;
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
