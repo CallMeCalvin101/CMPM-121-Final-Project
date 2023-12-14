@@ -5,11 +5,14 @@ import translations from "./uiText.json";
 import { flowerTypes, weedTypes } from "./plants.ts";
 //------------------------------------ Global Vars ------------------------------------------------------------------------------------
 
-const canvas = document.getElementById("game");
-const gameHeight = (canvas! as HTMLCanvasElement).height;
-const gameWidth = (canvas! as HTMLCanvasElement).width;
+const canvas: HTMLCanvasElement = document.getElementById(
+  "game"
+) as HTMLCanvasElement;
+const gameHeight = canvas.height;
+const gameWidth = canvas.width;
 
-const ctx = (canvas! as HTMLCanvasElement).getContext("2d");
+const ctx = canvas.getContext("2d")!;
+
 const testScenario = new Scenario(gameConditions);
 let savedGameStates = new Map<string, GameState[]>();
 
@@ -72,7 +75,7 @@ class Character {
   constructor(
     public posX: number,
     public posY: number,
-    public plants: Plant[],
+    public plants: Plant[]
   ) {}
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -86,7 +89,7 @@ class Character {
   }
 
   dragPos(direction: "N" | "E" | "S" | "W", magnitude: number) {
-    const currentCell = this.getCurrentCell();
+    const currentCell = getCurrentCell(this.posX, this.posY);
     switch (direction) {
       case "N":
         if (currentCell!.rowIndex > 0) {
@@ -120,14 +123,7 @@ class Character {
         }
         break;
     }
-  }
-
-  //return the cell and its properties
-  getCurrentCell(): Cell | null {
-    const gridY = Math.floor(this.posX / CELL_SIZE);
-    const gridX = Math.floor(this.posY / CELL_SIZE);
-
-    return game.getCell(gridX, gridY);
+    console.log("Farmer at (" + this.posX + ", " + this.posY + ")");
   }
 }
 
@@ -161,7 +157,7 @@ function simulateGrowth(cell: Cell) {
         ",",
         cell.colIndex,
         ") is growing! Growth level:",
-        cell.growthLevel,
+        cell.growthLevel
       );
       game.storeCell(cell);
     } else {
@@ -171,7 +167,7 @@ function simulateGrowth(cell: Cell) {
         cell.rowIndex,
         ",",
         cell.colIndex,
-        ") is ready for harvest!",
+        ") is ready for harvest!"
       );
     }
   }
@@ -193,7 +189,7 @@ export class Game {
     time?: number,
     states?: GameState[],
     weatherCondition?: string,
-    weatherDegree?: number,
+    weatherDegree?: number
   ) {
     this.size = gridSize;
     this.grid = grid ? grid : new ArrayBuffer(gridSize * gridSize * CELL_BYTES);
@@ -302,7 +298,7 @@ export class Game {
           " in row ",
           gridView.getUint8(byteOffset + 1),
           " col ",
-          gridView.getUint8(byteOffset + 2),
+          gridView.getUint8(byteOffset + 2)
         );
       }
     }
@@ -313,7 +309,7 @@ export class Game {
       const currentState = this.states.pop();
       this.redoStack.push(this.cloneGameState(currentState!));
       game.applyGameState(
-        this.cloneGameState(this.states[this.states.length - 1]),
+        this.cloneGameState(this.states[this.states.length - 1])
       );
     } else {
       console.log("Undo not available.");
@@ -365,22 +361,22 @@ export class Game {
     if (availableLanguagesList[curLanguage] != "arabic") {
       confirmReap = window.confirm(
         `${localizeText("reap prompt")} ${localizeText(
-          getPlant(currentCell.plant)!.name.toLowerCase(),
+          getPlant(currentCell.plant)!.name.toLowerCase()
         )} \n${localizeText("sun")} ${currentCell.sunLevel}, ${localizeText(
-          "water",
+          "water"
         )} ${currentCell.waterLevel}, ${localizeText("growth")} ${
           currentCell.growthLevel
-        }`,
+        }`
       );
     } else {
       confirmReap = window.confirm(
         `${currentCell.growthLevel} ${localizeText("growth")}, ${
           currentCell.waterLevel
         } ${localizeText("water")}, ${currentCell.sunLevel} ${localizeText(
-          "sun",
+          "sun"
         )}\n ${localizeText(
-          getPlant(currentCell.plant)!.name.toLowerCase(),
-        )} ${localizeText("reap prompt")}`,
+          getPlant(currentCell.plant)!.name.toLowerCase()
+        )} ${localizeText("reap prompt")}`
       );
     }
 
@@ -400,7 +396,7 @@ export class Game {
           flowersHarvested[getFlowerIndex(getPlant(currentCell.plant)!.name)],
           " ",
           reapedPlant,
-          "s in inventory",
+          "s in inventory"
         );
         this.updateUI();
       }
@@ -408,7 +404,7 @@ export class Game {
     console.log(
       `You reaped the ${getPlant(currentCell.plant)!.name} plant! in  cell (${
         currentCell.rowIndex
-      },${currentCell.colIndex})`,
+      },${currentCell.colIndex})`
     );
     currentCell.plant = 0; // Remove plant from cell
     currentCell.sunLevel = 0;
@@ -483,7 +479,7 @@ export class Game {
 
     savedGameStates.set(
       saveName,
-      this.states.map((state) => this.cloneGameState(state)),
+      this.states.map((state) => this.cloneGameState(state))
     );
     alert(`Game saved as "${saveName}".\nPress "L" key to load a saved game.`);
 
@@ -504,7 +500,7 @@ export class Game {
     });
     localStorage.setItem(
       "savedGames",
-      JSON.stringify(Array.from(encodedSavedGameStates.entries())),
+      JSON.stringify(Array.from(encodedSavedGameStates.entries()))
     );
   }
 
@@ -535,7 +531,7 @@ export class Game {
             .map((state) => this.cloneGameState(state));
 
           this.applyGameState(
-            this.cloneGameState(this.states[this.states.length - 1]),
+            this.cloneGameState(this.states[this.states.length - 1])
           );
           this.redoStack = [];
           notifyChange("stateChanged");
@@ -554,7 +550,7 @@ export class Game {
       "New Day: Weather:",
       this.weatherCondition,
       " severity: ",
-      this.weatherDegree,
+      this.weatherDegree
     );
   }
   //update the weather condition, player seeds and current Cell text on screen
@@ -575,7 +571,7 @@ export class Game {
         .map(
           (value, index) =>
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `${translateFlowerList([getPlant(index + 1)!.name])}: ${value}`,
+            `${translateFlowerList([getPlant(index + 1)!.name])}: ${value}`
         )
         .join(", ")}`; //only works right now since theres only one condition/target
     } else {
@@ -584,7 +580,7 @@ export class Game {
         .map(
           (value, index) =>
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `${translateFlowerList([getPlant(index + 1)!.name])}: ${value}`,
+            `${translateFlowerList([getPlant(index + 1)!.name])}: ${value}`
         )
         .join(", ")} ${localizeText("victory")}`; //only works right now since theres only one condition/target
     }
@@ -593,13 +589,13 @@ export class Game {
     const ownedSeedElement = document.getElementById("seed")!;
     if (availableLanguagesList[curLanguage] != "arabic") {
       ownedSeedElement.innerHTML = `${localizeText(
-        "seeds",
+        "seeds"
       )} ${translateFlowerList(flowerTypes.map((flower) => flower.name)).join(
-        ", ",
+        ", "
       )}`;
     } else {
       ownedSeedElement.innerHTML = `${translateFlowerList(
-        flowerTypes.map((flower) => flower.name),
+        flowerTypes.map((flower) => flower.name)
       ).join(", ")} ${localizeText("seeds")} `;
     }
 
@@ -609,16 +605,16 @@ export class Game {
       harvestedPlants!.innerHTML = `${localizeText("flowers")} ${flowerTypes
         .map((flower, index) =>
           [translateFlowerList([flower.name]), flowersHarvested[index]].join(
-            ": ",
-          ),
+            ": "
+          )
         )
         .join(", ")}`;
     } else {
       harvestedPlants!.innerHTML = `${flowerTypes
         .map((flower, index) =>
           [translateFlowerList([flower.name]), flowersHarvested[index]].join(
-            ": ",
-          ),
+            ": "
+          )
         )
         .join(", ")} ${localizeText("flowers")}`;
     }
@@ -627,13 +623,13 @@ export class Game {
     const weatherElement = document.getElementById("weather")!;
     if (availableLanguagesList[curLanguage] != "arabic") {
       weatherElement.innerHTML = `${localizeText("weather")} ${localizeText(
-        this.weatherCondition,
+        this.weatherCondition
       )}, ${localizeText("severity")} ${this.weatherDegree}`;
     } else {
       weatherElement.innerHTML = `${localizeText(
-        this.weatherCondition,
+        this.weatherCondition
       )} ${localizeText("weather")}, ${this.weatherDegree} ${localizeText(
-        "severity",
+        "severity"
       )}`;
     }
   }
@@ -673,13 +669,13 @@ export class Game {
         }]. ${localizeText("plant type")} ${translateFlowerList([
           getPlant(cell.plant)!.name,
         ])} ${localizeText("water")} ${cell.waterLevel}. ${localizeText(
-          "growth",
+          "growth"
         )} ${cell.growthLevel}`;
       } else {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         cellElement!.innerHTML = `${cell.growthLevel} ${localizeText(
-          "water",
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          "water"
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         )} ${cell.waterLevel}. ${localizeText("growth")} ${translateFlowerList([
           getPlant(cell.plant)!.name,
         ])} ${localizeText("plant type")} .[${cell.rowIndex},${
@@ -744,6 +740,14 @@ export function notifyChange(name: string) {
   document.dispatchEvent(new Event(name));
 }
 
+//return the cell and its properties
+function getCurrentCell(x: number, y: number): Cell | null {
+  const gridY = Math.floor(x / CELL_SIZE);
+  const gridX = Math.floor(y / CELL_SIZE);
+
+  return game.getCell(gridX, gridY);
+}
+
 //returns true if plant ID corresponds to a weed, false otherwise
 function isWeed(plantID: number): boolean {
   return weedTypes.some((plant) => plant.name == plants.get(plantID));
@@ -754,7 +758,7 @@ function getPlant(id: number): Plant | undefined {
   const plantName = plants.get(id)!;
   if (plantName) {
     return allPlantTypes.find(
-      (plant) => plant.name.toLowerCase() == plantName.toLowerCase(),
+      (plant) => plant.name.toLowerCase() == plantName.toLowerCase()
     );
   } else {
     return undefined;
@@ -790,7 +794,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const uint8Array = new Uint8Array(buffer);
   const binaryString = uint8Array.reduce(
     (acc, byte) => acc + String.fromCharCode(byte),
-    "",
+    ""
   );
   return btoa(binaryString);
 }
@@ -822,14 +826,14 @@ function getCurrentDateTime() {
 
 // Draw game
 function drawGame() {
-  ctx!.clearRect(0, 0, gameWidth, gameHeight);
-  game.draw(ctx!);
-  farmer.draw(ctx!);
+  ctx.clearRect(0, 0, gameWidth, gameHeight);
+  game.draw(ctx);
+  farmer.draw(ctx);
 }
 
 function promptPlantSelection(): string {
   const plantNames = translateFlowerList(
-    flowerTypes.map((flower) => flower.name),
+    flowerTypes.map((flower) => flower.name)
   ).join(", ");
   let promptText;
   if (availableLanguagesList[curLanguage] != "arabic") {
@@ -894,7 +898,7 @@ const keyHandlers: Record<string, () => void> = {
   ArrowRight: () => farmer.dragPos("E", CELL_SIZE),
   ArrowUp: () => farmer.dragPos("N", CELL_SIZE),
   ArrowDown: () => farmer.dragPos("S", CELL_SIZE),
-  " ": () => game.interact(farmer.getCurrentCell()!),
+  " ": () => game.interact(getCurrentCell(farmer.posX, farmer.posY)!),
   u: () => game.undo(),
   r: () => game.redo(),
   d: () => game.deleteLocalStorage(),
@@ -913,14 +917,45 @@ document.addEventListener("keydown", (event) => {
     }
   }
 
-  game.updateCurrentCellUI(farmer.getCurrentCell()!);
+  game.updateCurrentCellUI(getCurrentCell(farmer.posX, farmer.posY)!);
+  drawGame();
+});
+
+//on-screen button controls
+const up = document.getElementById("up")!;
+up.addEventListener("pointerdown", () => farmer.dragPos("N", CELL_SIZE));
+const down = document.getElementById("down")!;
+down.addEventListener("pointerdown", () => farmer.dragPos("S", CELL_SIZE));
+const left = document.getElementById("left")!;
+left.addEventListener("pointerdown", () => farmer.dragPos("W", CELL_SIZE));
+const right = document.getElementById("right")!;
+right.addEventListener("pointerdown", () => farmer.dragPos("E", CELL_SIZE));
+const interact = document.getElementById("interact")!;
+interact.addEventListener("pointerdown", () =>
+  game.interact(getCurrentCell(farmer.posX, farmer.posY)!)
+);
+const undo = document.getElementById("undo")!;
+undo.addEventListener("pointerdown", () => game.undo());
+const redo = document.getElementById("redo")!;
+redo.addEventListener("pointerdown", () => game.redo());
+const deleteData = document.getElementById("delete")!;
+deleteData.addEventListener("pointerdown", () => game.deleteLocalStorage());
+const day = document.getElementById("day")!;
+day.addEventListener("pointerdown", () => game.passTime());
+const save = document.getElementById("save")!;
+save.addEventListener("pointerdown", () => game.manualSave());
+const load = document.getElementById("load")!;
+load.addEventListener("pointerdown", () => game.loadSavedGame());
+// redraw on pointerup
+document.addEventListener("pointerup", () => {
+  game.updateCurrentCellUI(getCurrentCell(farmer.posX, farmer.posY)!);
   drawGame();
 });
 
 //observer for state changed event will update UI elements and redraw game
 document.addEventListener("stateChanged", () => {
   game.updateUI();
-  game.draw(ctx!);
+  game.draw(ctx);
   const encodedStates: EncodedState[] = game.states.map((gameState) => {
     return {
       grid: arrayBufferToBase64(gameState.grid),
@@ -953,7 +988,7 @@ window.addEventListener("beforeunload", () => {
   });
   localStorage.setItem(
     "savedGames",
-    JSON.stringify(Array.from(encodedSavedGameStates.entries())),
+    JSON.stringify(Array.from(encodedSavedGameStates.entries()))
   );
 });
 
@@ -963,7 +998,7 @@ function changeLanguage() {
     curLanguage = 0;
   }
   game.updateUI();
-  game.updateCurrentCellUI(farmer.getCurrentCell()!);
+  game.updateCurrentCellUI(getCurrentCell(farmer.posX, farmer.posY)!);
 }
 
 const languageButton = document.getElementById("languageButton")!;
@@ -991,7 +1026,7 @@ if (storedData) {
           };
         }),
       ];
-    },
+    }
   );
   savedGameStates = new Map<string, GameState[]>(decodedData);
 }
@@ -1024,7 +1059,7 @@ if (autosave) {
     currentTime,
     states,
     weatherCondition,
-    weatherDegree,
+    weatherDegree
   );
 } else {
   game = new Game(GAME_SIZE); //not including optional params creates a fresh game

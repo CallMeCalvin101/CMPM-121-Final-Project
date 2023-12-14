@@ -14,16 +14,54 @@
   </head>
   <body>
     <div id="app">
-      <canvas id="game" width="600" height="600"></canvas>
-      <button id="languageButton">Change Language</button>
-      <div id="ui-container">
+      <div class="side-column">
+        <div id="top-left">
+          <button id="languageButton">Change Language</button>
+          <p id="time" class="ui">Time</p>
+        </div>
+        <div id="inner-row">
+          <div class="inner-col">
+            <div id="game-controls">
+              <button id="up">⬆️</button>
+              <div id="row-controls">
+                <button id="left">⬅️</button>
+                <button id="right">➡️</button>
+              </div>
+              <button id="down">⬇️</button>
+            </div>
+          </div>
+          <div class="inner-col">
+            <button id="interact">interact</button>
+          </div>
+        </div>
+        <div id="game-buttons">
+          <div class="button-col">
+            <button id="day">time</button>
+            <button id="undo">undo</button>
+            <button id="redo">redo</button>
+          </div>
+          <div class="button-col">
+            <button id="save">save</button>
+            <button id="load">load</button>
+            <button id="delete">delete</button>
+          </div>
+        </div>
+      </div>
+      <div id="center-column">
         <p id="controls" class="ui">Controls</p>
-        <p id="time" class="ui">Time</p>
-        <p id="win" class="ui">Win Conditions</p>
-        <p id="seed" class="ui">Seed Info</p>
-        <p id="cell" class="ui">Cell Info</p>
-        <p id="plants" class="ui">Harvested Plants</p>
+        <canvas id="game" width="700" height="700"></canvas>
         <p id="weather" class="ui">Current Weather:</p>
+        <p id="plants" class="ui">Harvested Plants</p>
+        
+      </div>
+      <div class="side-column">
+        <div id="ui-container">
+          <p id="win" class="ui">Win Conditions</p>
+          <p id="seed" class="ui">Seed Info</p>
+          <p id="cell" class="ui">Cell Info</p>
+
+          
+        </div>
       </div>
     </div>
     <script type="module" src="src/main.ts"></script>
