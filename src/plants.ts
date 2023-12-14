@@ -10,7 +10,7 @@ class FlowerCommand implements PlantCommand {
     public color: string,
     public sunRequisite: number,
     public waterRequisite: number,
-    public vibeRequisite: number
+    public vibeRequisite: number,
   ) {}
 
   addTo(plantTypes: Plant[][]): void {
@@ -25,7 +25,10 @@ class FlowerCommand implements PlantCommand {
 }
 
 class WeedCommand implements PlantCommand {
-  constructor(public name: string, public color: string) {}
+  constructor(
+    public name: string,
+    public color: string,
+  ) {}
 
   addTo(plantTypes: Plant[][]): void {
     plantTypes[1].push({
@@ -53,7 +56,7 @@ class CommandFactory {
             return new FlowerCommand(name, color, sunReq, waterReq, vibeReq);
           } else {
             throw Error(
-              "Invalid Plant Command: USAGE: flower [name] [color] [sunReq] [waterReq] [vibeReq]"
+              "Invalid Plant Command: USAGE: flower [name] [color] [sunReq] [waterReq] [vibeReq]",
             );
           }
 

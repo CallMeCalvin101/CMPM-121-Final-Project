@@ -57,23 +57,23 @@ export class Scenario {
 
   public updateCurrentConditions(
     time: number,
-    plantsHarvested: number[]
+    plantsHarvested: number[],
   ): void {
     plantsHarvested.forEach(
-      (value, index) => (this.current_harvest[index] = value)
+      (value, index) => (this.current_harvest[index] = value),
     );
     this.current_time = time;
     console.log(
       "updated current conditions: time: ",
       time,
       " plants harvested: ",
-      plantsHarvested
+      plantsHarvested,
     );
   }
 
   public victoryConditionsMet(): boolean {
     return this.victory_conditions.harvest_goal.every(
-      (value, index) => value <= this.current_harvest[index]
+      (value, index) => value <= this.current_harvest[index],
     );
   }
 }

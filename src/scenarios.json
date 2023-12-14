@@ -1,15 +1,15 @@
 {
-    "events_schedule": [
-      {
-        "time": 2,
-        "name": "WeedGrowth",
-        "row": 4,
-        "col": 2,
-        "complete": false
-        }
-    ],
-    "starting_conditions": [1, 6],
-    "victory_conditions": {
-      "harvest_goal": [1,1,1]
+  "events_schedule": [
+    {
+      "time": 2,
+      "name": "WeedGrowth",
+      "row": 4,
+      "col": 2,
+      "complete": false
     }
+  ],
+  "starting_conditions": [1, 6],
+  "victory_conditions": {
+    "harvest_goal": [1, 1, 1]
   }
+}
