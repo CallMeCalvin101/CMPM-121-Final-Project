@@ -64,7 +64,7 @@
     "cell": "Bạn đang ở tại điểm",
     "no plant": "Đất chưa có hoa trồng",
     "plant type": "Loại hoa:",
-    "sun": "Sun Level:",
+    "sun": "Mức độ mặt trời:",
     "water": "Mực nước:",
     "growth": "Mức độ tăng trưởng:",
     "sunflower": "Hoa hướng dương",
@@ -73,12 +73,12 @@
     "lily": "Hoa loa kèn",
     "marigold": "Giống cúc vàng",
     "fuchsia": "Hoa vân anh",
-    "crabgrass": "Crabgrass",
+    "crabgrass": "cỏ cua",
     "rainy": "Nhiều mưa",
     "sunny": "Nhiều nắng",
-    "plant prompt": "What would you like to plant? Available plants:\n",
-    "reap prompt": "Do you want to reap the",
-    "change language": "Change Language"
+    "plant prompt": "Bạn muốn trồng gì? Cây có sẵn:\n",
+    "reap prompt": "Bạn có muốn gặt hái",
+    "change language": "Thay đổi ngôn ngữ"
   },
   "arabic": {
     "controls": "الضوابط: مفاتيح الأسهم للتحرك! مفتاح المسافة لجني/زرع النبات. تي لتمضية الوقت. S للحفظ، وL للتحميل، وD لحذف جميع البيانات. U للتراجع، R للإعادة.",
