@@ -1,6 +1,7 @@
 import "./style.css";
 import { Scenario } from "./scenario.ts";
 import gameConditions from "./scenarios.json";
+import translations from "./uiText.json";
 import { flowerTypes, weedTypes } from "./plants.ts";
 //------------------------------------ Global Vars ------------------------------------------------------------------------------------
 
@@ -26,6 +27,16 @@ const plants: Map<number, string> = new Map<number, string>();
 
 const allPlantTypes: Plant[] = [...flowerTypes, ...weedTypes];
 allPlantTypes.forEach((plant, index) => plants.set(index + 1, plant.name));
+
+// variable to track localized version
+type availableLanguages = "english" | "japanese" | "vietnamese";
+const availableLanguagesList: availableLanguages[] = [
+  "english",
+  "japanese",
+  "vietnamese",
+];
+let curLanguage: number = 0;
+const languageBase: Map<availableLanguages, Map<string, string>> = new Map();
 
 //------------------------------------ Class def ------------------------------------------------------------------------------------
 interface Cell {
@@ -531,37 +542,37 @@ export class Game {
   updateUI() {
     //Controls
     const controlsUI = document.getElementById("controls")!;
-    controlsUI.innerHTML = `<strong>Controls:</strong> Arrow Keys to Move! Spacebar to Reap/Sow plant. T to pass the time. S to save, L to load, and D to delete all data. U to undo, R to redo.`;
+    controlsUI.innerHTML = `${localizeText("controls")}`;
 
     //Time UI
     const currentTime = document.getElementById("time")!;
-    currentTime.innerHTML = `<strong>Day:</strong> ${this.time}`;
+    currentTime.innerHTML = `${localizeText("day")} ${this.time}`;
 
     //Win Conditions UI
     const victoryConditionUI = document.getElementById("win");
-    victoryConditionUI!.innerHTML = `<strong>Victory Condition: </strong> Harvest the following! ${testScenario
+    victoryConditionUI!.innerHTML = `${localizeText("victory")} ${testScenario
       .getVictoryConditions()
       .map((value, index) => `${getPlant(index + 1)!.name}: ${value}`)
       .join(", ")}`; //only works right now since theres only one condition/target
 
     //Seeds UI
     const ownedSeedElement = document.getElementById("seed")!;
-    ownedSeedElement.innerHTML = `<strong>Owned Seeds:</strong> ${flowerTypes
+    ownedSeedElement.innerHTML = `${localizeText("seeds")} ${flowerTypes
       .map((flower) => flower.name)
       .join(", ")}`;
 
     //Harvested plants UI
     const harvestedPlants = document.getElementById("plants");
-    harvestedPlants!.innerHTML = `<strong>Harvested Flowers:</strong> ${flowerTypes
+    harvestedPlants!.innerHTML = `${localizeText("flowers")} ${flowerTypes
       .map((flower, index) => [flower.name, flowersHarvested[index]].join(": "))
       .join(", ")}`;
 
     //Weather UI
     const weatherElement = document.getElementById("weather")!;
-    weatherElement.innerHTML = `<strong>Current Weather:</strong> ${
+    weatherElement.innerHTML = `${localizeText("weather")} ${
       this.weatherCondition.charAt(0).toUpperCase() +
       this.weatherCondition.slice(1)
-    }, <strong>Severity:</strong> ${this.weatherDegree}`;
+    }, ${localizeText("severity")} ${this.weatherDegree}`;
   }
 
   //update water and sun levels for all plants on grid
@@ -592,15 +603,17 @@ export class Game {
   updateCurrentCellUI(cell: Cell) {
     const cellElement = document.getElementById("cell");
     if (cell.plant) {
-      cellElement!.innerHTML = `You are on <strong>cell</strong> [${
-        cell.rowIndex
-      },${cell.colIndex}]. <strong>Plant Type:</strong> ${
+      cellElement!.innerHTML = `${localizeText("cell")} [${cell.rowIndex},${
+        cell.colIndex
+      }]. ${localizeText("plant type")} ${
         getPlant(cell.plant)!.name
-      } <strong>Water Level:</strong> ${
-        cell.waterLevel
-      }. <strong>Growth Level:<strong> ${cell.growthLevel}`;
+      } ${localizeText("water")} ${cell.waterLevel}. ${localizeText(
+        "growth"
+      )} ${cell.growthLevel}`;
     } else {
-      cellElement!.innerHTML = `You are on <strong>cell</strong> [${cell.rowIndex},${cell.colIndex}], There is no Plant here`;
+      cellElement!.innerHTML = `${localizeText("cell")} [${cell.rowIndex},${
+        cell.colIndex
+      }], ${localizeText("no plant")}`;
     }
   }
 
@@ -745,6 +758,35 @@ function checkScenario(scenario: Scenario) {
   //return true or false if victory conditions met
   return scenario.victoryConditionsMet();
 }
+
+function parseTranslationsToMap() {
+  const tempObjectArr = [
+    translations.english,
+    translations.japanese,
+    translations.vietnamese,
+  ];
+  const tempStringArr: availableLanguages[] = [
+    "english",
+    "japanese",
+    "vietnamese",
+  ];
+
+  for (let i = 0; i < tempObjectArr.length; i++) {
+    const localMap = new Map<string, string>();
+    Object.entries(tempObjectArr[i]).forEach((phrase) => {
+      const [key, text] = phrase;
+      localMap.set(key, text);
+    });
+
+    languageBase.set(tempStringArr[i], localMap);
+  }
+}
+parseTranslationsToMap();
+
+function localizeText(textKey: string): string {
+  return languageBase.get(availableLanguagesList[curLanguage])?.get(textKey)!;
+}
+
 //------------------------------------ Event Listeners ------------------------------------------------------------------------------------
 
 //character movement and controls
@@ -814,6 +856,20 @@ window.addEventListener("beforeunload", () => {
     "savedGames",
     JSON.stringify(Array.from(encodedSavedGameStates.entries()))
   );
+});
+
+function changeLanguage() {
+  curLanguage += 1;
+  if (curLanguage >= availableLanguagesList.length) {
+    curLanguage = 0;
+  }
+  game.updateUI();
+  game.updateCurrentCellUI(farmer.getCurrentCell()!);
+}
+
+const languageButton = document.getElementById("languageButton")!;
+languageButton.addEventListener("click", () => {
+  changeLanguage();
 });
 
 //------------------------------------ Main ------------------------------------------------------------------------------------
